@@ -140,38 +140,7 @@ void Game::OnStart()
 //
 void Game::OnStarted(std::shared_ptr<Player> banker)
 {
-	if (!banker) return;
-
-	auto banker_niu = banker->GetNiu();
-
-	for (auto player : _players)
-	{
-		if (!player || player == banker) continue;
-
-		auto niu = player->GetNiu();
-		if (niu > banker_niu)
-		{
-			DEBUG("玩家:{} 牛:{} 大于庄家:{} 牛:{}", player->GetID(), niu, banker->GetID(), banker_niu);
-		}
-		else if (niu < banker_niu)
-		{
-			DEBUG("玩家:{} 牛:{} 小于庄家:{} 牛:{}", player->GetID(), niu, banker->GetID(), banker_niu);
-		}
-		else
-		{
-			bool banker_win = GameInstance.ComparePai(banker->GetMaxPai(), player->GetMaxPai());
-			if (banker_win) 
-			{
-				DEBUG("玩家:{} 牛:{} 大于庄家:{} 牛:{}", player->GetID(), niu, banker->GetID(), banker_niu);
-			}
-			else
-			{
-				DEBUG("玩家:{} 牛:{} 小于庄家:{} 牛:{}", player->GetID(), niu, banker->GetID(), banker_niu);
-			}
-		}
-	}
-
-	OnGameOver(0); //牌局结束
+	Calculate(banker); //直接结算
 }
 
 bool Game::OnGameOver(int64_t player_id)
@@ -257,10 +226,10 @@ void Game::PaiPushDown()
 	BroadCast(proto);
 }
 	
-void Game::Calculate(int64_t hupai_player_id/*胡牌玩家*/, int64_t dianpao_player_id/*点炮玩家*/, std::unordered_set<int32_t>& fan_list)
+void Game::Calculate(std::shared_ptr<Player> banker)
 {
-	if (!_room) return;
-
+	if (!_room || !banker) return;
+	
 	//
 	//1.推到牌
 	//
@@ -269,106 +238,77 @@ void Game::Calculate(int64_t hupai_player_id/*胡牌玩家*/, int64_t dianpao_pl
 	//
 	//2.结算
 	//
-	if (hupai_player_id != dianpao_player_id) _room->AddDianpao(dianpao_player_id); //不是自摸
 	
+	Asset::GameCalculate message;
+
+	//
+	//(1)各个玩家输牌积分
+	//
+	//std::unordered_map<int64_t, int32_t> player_score; //非庄家输赢分数
+	auto banker_niu = banker->GetNiu();
+	int32_t top_mutiple = _room->MaxFan(); //封顶番数
 	int32_t base_score = 1;
 
-	auto hu_player = GetPlayer(hupai_player_id);
-	if (!hu_player) return;
-
-	if (IsBanker(hupai_player_id)) 
+	for (auto player : _players)
 	{
-		fan_list.emplace(Asset::FAN_TYPE_ZHUANG);
-	}
-
-	Asset::GameCalculate message;
-	message.set_calculte_type(Asset::CALCULATE_TYPE_HUPAI);
-	message.mutable_baopai()->CopyFrom(_baopai);
-
-	auto dianpao_player = GetPlayer(dianpao_player_id);
-	if (dianpao_player) message.set_dianpao_player_position(dianpao_player->GetPosition());
-	//
-	//胡牌积分，三部分
-	//
-	//1.各个玩家输牌积分
-	//
-	
-	int32_t top_mutiple = _room->MaxFan(); //封顶番数
-
-	for (int i = 0; i < MAX_PLAYER_COUNT; ++i)
-	{
-		auto player = _players[i];
-		if (!player) return;
-		
-		auto player_id = player->GetID();
+		if (!player) continue;
 		
 		auto record = message.mutable_record()->mutable_list()->Add();
-		record->set_player_id(player_id);
+		record->set_player_id(player->GetID());
 		record->set_nickname(player->GetNickName());
 		record->set_headimgurl(player->GetHeadImag());
-
-		if (hupai_player_id == player_id) continue;
-
-		int32_t score = base_score;
 		
+		if (player == banker) continue;
+
+		auto niu = player->GetNiu();
+		int32_t fan = _room->GetMultiple(niu);
+		int32_t score = base_score * fan;
+
+		if (banker_niu != 0 && niu > banker_niu)
+		{
+			DEBUG("玩家:{} 牛:{} 大于庄家:{} 牛:{} 分数:{}", player->GetID(), niu, banker->GetID(), banker_niu, score);
+		}
+		else if (niu != 0 && niu < banker_niu)
+		{
+			score = -_room->GetMultiple(banker_niu);
+			DEBUG("玩家:{} 牛:{} 小于庄家:{} 牛:{} 分数:{}", player->GetID(), niu, banker->GetID(), score);
+		}
+		else //都牛牛或者都非牛牛
+		{
+			bool banker_win = GameInstance.ComparePai(banker->GetMaxPai(), player->GetMaxPai());
+			if (banker_win) 
+			{
+				score = -score;
+				DEBUG("玩家:{} 牛:{} 大于庄家:{} 牛:{} 分数:{}", player->GetID(), niu, banker->GetID(), banker_niu, score);
+			}
+			else
+			{
+				DEBUG("玩家:{} 牛:{} 小于庄家:{} 牛:{} 分数:{}", player->GetID(), niu, banker->GetID(), banker_niu, score);
+			}
+		}
+			
+		
+		//player_score.emplace(player->GetID(), score);
+
 		//
 		//牌型基础分值计算
 		//
-		for (const auto& fan : fan_list)
-		{
-			score *= GetMultiple(fan);
-			
-			auto detail = record->mutable_details()->Add();
-			detail->set_fan_type((Asset::FAN_TYPE)fan);
-			detail->set_score(-score);
-
-			//DEBUG("player_id:{} fan:{} score:{}", player_id, fan, -score);
-		}
+		auto detail = record->mutable_details()->Add();
+		detail->set_fan_type(fan);
+		detail->set_score(-score);
 	
-		//
-		//操作和玩家牌状态分值计算
-		//
-		//每个玩家不同
-		//
-			
-		if (dianpao_player_id == hupai_player_id)
-		{
-			score *= GetMultiple(Asset::FAN_TYPE_ZI_MO); //自摸
-			
-			auto detail = record->mutable_details()->Add();
-			detail->set_fan_type(Asset::FAN_TYPE_ZI_MO);
-			detail->set_score(-score);
-			
-			//DEBUG("player_id:{} fan:{} score:{}", player_id, Asset::FAN_TYPE_ZI_MO, -score);
-		}
-
-		//
-		//庄家
-		//
-		if (IsBanker(player_id)) 
-		{
-			score *= GetMultiple(Asset::FAN_TYPE_ZHUANG); 
-			
-			auto detail = record->mutable_details()->Add();
-			detail->set_fan_type(Asset::FAN_TYPE_ZHUANG);
-			detail->set_score(-score);
-		}
-
 		//
 		//输牌玩家番数上限封底
 		//
 		if (top_mutiple > 0) score = std::min(top_mutiple, score); //封顶
 
 		record->set_score(-score); //玩家所输积分
-			
-		//DEBUG("玩家:{} 因为牌型和位置输所有积分:{}", player_id, -score);
 	}
 
 	//
-	//2.胡牌玩家积分
+	//(2)庄家积分
 	//
-	//其他玩家积分之和
-	//
+
 	auto get_record = [&](int64_t player_id)->google::protobuf::internal::RepeatedPtrIterator<Adoter::Asset::GameRecord_GameElement> { 
 		auto it = std::find_if(message.mutable_record()->mutable_list()->begin(), message.mutable_record()->mutable_list()->end(), 
 				[player_id](const Asset::GameRecord_GameElement& ele){
@@ -377,60 +317,8 @@ void Game::Calculate(int64_t hupai_player_id/*胡牌玩家*/, int64_t dianpao_pl
 		return it;
 	};
 	
-	auto record = get_record(hupai_player_id); 
+	auto record = get_record(banker->GetID()); 
 	if (record == message.mutable_record()->mutable_list()->end()) return;
-
-	auto total_score = 0;
-	std::unordered_map<int64_t, int32_t> player_score; //各个玩家输积分//不包括杠
-
-	for (int32_t i = 0; i < message.record().list().size(); ++i)
-	{
-		const auto& list_element = message.record().list(i);
-
-		if (list_element.player_id() == hupai_player_id) continue;
-
-		if (_room->HasYiJiaFu() && dianpao_player_id != 0 && dianpao_player_id != hupai_player_id && dianpao_player_id != list_element.player_id()) 
-		{
-			message.mutable_record()->mutable_list(i)->set_score(0); //点炮一家付//其他两家不必付钱
-			message.mutable_record()->mutable_list(i)->mutable_details()->Clear();
-			continue; 
-		}
-
-		total_score -= list_element.score();
-		player_score.emplace(list_element.player_id(), -list_element.score());
-		
-		for (const auto& element : list_element.details())
-		{
-			const auto& fan_type = element.fan_type();
-
-			auto it_score = std::find_if(record->mutable_details()->begin(), record->mutable_details()->end(), 
-				[fan_type](const Asset::GameRecord_GameElement_DetailElement& detail_element){
-					return detail_element.fan_type() == fan_type;
-			});
-			if (it_score == record->mutable_details()->end()) 
-			{
-				auto rcd = record->mutable_details()->Add();
-				rcd->set_fan_type(element.fan_type());
-				rcd->set_score(-element.score());
-			}
-			else
-			{
-				it_score->set_score(it_score->score() + (-element.score())); //输牌玩家存储的是负数
-			}
-		}
-	}
-
-	record->set_score(total_score); //胡牌玩家赢的总积分
-	
-	//
-	//最大番数
-	//
-	auto max_fan_it = std::max_element(record->details().begin(), record->details().end(), 
-			[&](const Asset::GameRecord_GameElement_DetailElement& detail1, const Asset::GameRecord_GameElement_DetailElement& detail2){
-				return GetMultiple(detail1.fan_type()) < GetMultiple(detail2.fan_type()) ;
-			});
-	if (max_fan_it != record->details().end()) message.set_max_fan_type(max_fan_it->fan_type());
-
 	//
 	//好友房//匹配房记录消耗
 	//
@@ -475,14 +363,14 @@ void Game::Calculate(int64_t hupai_player_id/*胡牌玩家*/, int64_t dianpao_pl
 	}
 	
 	BroadCast(message);
-	OnGameOver(hupai_player_id); //结算之后才是真正结束
+	OnGameOver(0); //结算之后才是真正结束
 	
 	auto room_id = _room->GetID();
 	auto curr_count = _room->GetGamesCount();
 	auto open_rands = _room->GetOpenRands();
 	auto message_string = message.ShortDebugString();
 
-	LOG(INFO, "房间:{}第:{}/{}局结束，胡牌玩家:{} 点炮玩家:{}, 胡牌结算:{}", room_id, curr_count, open_rands, hupai_player_id, dianpao_player_id, message_string);
+	//LOG(INFO, "房间:{}第:{}/{}局结束，胡牌玩家:{} 点炮玩家:{}, 胡牌结算:{}", room_id, curr_count, open_rands, hupai_player_id, dianpao_player_id, message_string);
 }
 	
 void Game::BroadCast(pb::Message* message, int64_t exclude_player_id)

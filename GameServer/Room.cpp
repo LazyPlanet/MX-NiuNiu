@@ -507,31 +507,23 @@ int32_t Room::GetMultiple(int32_t fan_type)
 	const auto fan_asset = GetFan();
 	if (!fan_asset) return 0;
 
-	auto it = std::find_if(fan_asset->fans().begin(), fan_asset->fans().end(), [fan_type](const Asset::RoomFan_FanElement& element){
+	auto it = std::find_if(fan_asset->fans().begin(), fan_asset->fans().end(), [fan_type](const Asset::NiuNiuRoomFan_FanElement& element){
 			return fan_type == element.fan_type();
 	});
 	if (it == fan_asset->fans().end()) return 0;
 
-	return pow(2, it->multiple());
+	return it->multiple();
 }
 	
-const Asset::RoomFan* Room::GetFan()
+const Asset::NiuNiuRoomFan* Room::GetFan()
 {
-	auto city_type = _stuff.options().city_type();
+	auto message = AssetInstance.Get(g_const->niuniu_fan_id());
+	if (!message) return nullptr;
 
-	const auto& messages = AssetInstance.GetMessagesByType(Asset::ASSET_TYPE_ROOM_FAN);
-	auto it = std::find_if(messages.begin(), messages.end(), [city_type](pb::Message* message){
-				auto room_fan = dynamic_cast<Asset::RoomFan*>(message);
-				if (!room_fan) return false;
+	const auto fan = dynamic_cast<const Asset::NiuNiuRoomFan*>(message);
+	if (!fan) return nullptr;
 
-				return room_fan->city_type() == city_type;
-			});
-	if (it == messages.end()) return nullptr;
-
-	const auto room_fan = dynamic_cast<const Asset::RoomFan*>(*it);
-	if (!room_fan) return nullptr;
-
-	return room_fan;
+	return fan;
 }
 
 bool Room::Remove(int64_t player_id, Asset::GAME_OPER_TYPE reason)
