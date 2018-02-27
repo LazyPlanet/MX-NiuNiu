@@ -539,11 +539,12 @@ int32_t Player::CmdGameOperate(pb::Message* message)
 	if (!game_operate) return 1;
 	
 	game_operate->set_source_player_id(_player_id); //设置当前操作玩家
+	_player_prop.set_beilv(game_operate->beilv()); //倍率
 
 	switch(game_operate->oper_type())
 	{
 		case Asset::GAME_OPER_TYPE_NULL: 
-		case Asset::GAME_OPER_TYPE_START: //开始游戏：相当于准备
+		case Asset::GAME_OPER_TYPE_START: //开始游戏：其实是个准备//扑克押注
 		{
 			_player_prop.set_game_oper_state(game_operate->oper_type());
 		}
@@ -588,7 +589,7 @@ int32_t Player::CmdGameOperate(pb::Message* message)
 
 		default:
 		{
-			 _player_prop.clear_game_oper_state(); //错误状态
+			 //_player_prop.clear_game_oper_state(); //错误状态//交给房间逻辑处理
 		}
 		break;
 	}

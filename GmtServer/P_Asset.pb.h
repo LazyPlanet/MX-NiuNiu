@@ -69,6 +69,7 @@ class DailySign_ContinuousSign;
 class MailAttachment;
 class SystemMail;
 class SystemSpeak;
+class ClanLimit;
 class Item_CommonProp;
 class Item_Item;
 class Item_Normal;
@@ -339,6 +340,7 @@ enum ASSET_TYPE {
   ASSET_TYPE_DAILY_SIGN = 21,
   ASSET_TYPE_MAIL = 22,
   ASSET_TYPE_SYSTEM_SPEAK = 23,
+  ASSET_TYPE_CLAN_LIMIT = 24,
   ASSET_TYPE_COUNT = 200,
   ITEM_TYPE_BEGIN = 201,
   ITEM_TYPE_POTION = 202,
@@ -396,11 +398,16 @@ enum ROOM_EXTEND_TYPE {
   ROOM_EXTEND_TYPE_HUANGZHUANGHUANGGANG = 11,
   ROOM_EXTEND_TYPE_YIBIANGAO = 12,
   ROOM_EXTEND_TYPE_SIGUIYI = 13,
-  ROOM_EXTEND_TYPE_YIJIAFU = 14
+  ROOM_EXTEND_TYPE_YIJIAFU = 14,
+  ROOM_EXTEND_TYPE_HUIPAI = 15,
+  ROOM_EXTEND_TYPE_JUETOUHUI = 16,
+  ROOM_EXTEND_TYPE_QIONGHU = 17,
+  ROOM_EXTEND_TYPE_QIDUI = 18,
+  ROOM_EXTEND_TYPE_ZHUIFENGGANGA = 19
 };
 bool ROOM_EXTEND_TYPE_IsValid(int value);
 const ROOM_EXTEND_TYPE ROOM_EXTEND_TYPE_MIN = ROOM_EXTEND_TYPE_NULL;
-const ROOM_EXTEND_TYPE ROOM_EXTEND_TYPE_MAX = ROOM_EXTEND_TYPE_YIJIAFU;
+const ROOM_EXTEND_TYPE ROOM_EXTEND_TYPE_MAX = ROOM_EXTEND_TYPE_ZHUIFENGGANGA;
 const int ROOM_EXTEND_TYPE_ARRAYSIZE = ROOM_EXTEND_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* ROOM_EXTEND_TYPE_descriptor();
@@ -453,11 +460,12 @@ inline bool ROOM_PAY_TYPE_Parse(
 }
 enum CITY_TYPE {
   CITY_TYPE_CHAOYANG = 1,
-  CITY_TYPE_JIANPING = 2
+  CITY_TYPE_JIANPING = 2,
+  CITY_TYPE_YINGKOU = 3
 };
 bool CITY_TYPE_IsValid(int value);
 const CITY_TYPE CITY_TYPE_MIN = CITY_TYPE_CHAOYANG;
-const CITY_TYPE CITY_TYPE_MAX = CITY_TYPE_JIANPING;
+const CITY_TYPE CITY_TYPE_MAX = CITY_TYPE_YINGKOU;
 const int CITY_TYPE_ARRAYSIZE = CITY_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CITY_TYPE_descriptor();
@@ -475,11 +483,16 @@ enum CARD_TYPE {
   CARD_TYPE_BINGZI = 2,
   CARD_TYPE_TIAOZI = 3,
   CARD_TYPE_FENG = 4,
-  CARD_TYPE_JIAN = 5
+  CARD_TYPE_JIAN = 5,
+  CARD_TYPE_HONGTAO = 6,
+  CARD_TYPE_FANGPIAN = 7,
+  CARD_TYPE_HEITAO = 8,
+  CARD_TYPE_MEIHUA = 9,
+  CARD_TYPE_KINGS = 10
 };
 bool CARD_TYPE_IsValid(int value);
 const CARD_TYPE CARD_TYPE_MIN = CARD_TYPE_WANZI;
-const CARD_TYPE CARD_TYPE_MAX = CARD_TYPE_JIAN;
+const CARD_TYPE CARD_TYPE_MAX = CARD_TYPE_KINGS;
 const int CARD_TYPE_ARRAYSIZE = CARD_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CARD_TYPE_descriptor();
@@ -519,11 +532,14 @@ enum FAN_TYPE {
   FAN_TYPE_JIA_HU_HIGHER = 23,
   FAN_TYPE_PIAO_WEIHU = 24,
   FAN_TYPE_BAOSANJIA = 25,
-  FAN_TYPE_YIJIAFU = 26
+  FAN_TYPE_YIJIAFU = 26,
+  FAN_TYPE_QIDUI = 27,
+  FAN_TYPE_QIONGHU = 28,
+  FAN_TYPE_XUAN_JIAN_GANG = 29
 };
 bool FAN_TYPE_IsValid(int value);
 const FAN_TYPE FAN_TYPE_MIN = FAN_TYPE_PINGHU;
-const FAN_TYPE FAN_TYPE_MAX = FAN_TYPE_YIJIAFU;
+const FAN_TYPE FAN_TYPE_MAX = FAN_TYPE_XUAN_JIAN_GANG;
 const int FAN_TYPE_ARRAYSIZE = FAN_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* FAN_TYPE_descriptor();
@@ -535,6 +551,26 @@ inline bool FAN_TYPE_Parse(
     const ::std::string& name, FAN_TYPE* value) {
   return ::google::protobuf::internal::ParseNamedEnum<FAN_TYPE>(
     FAN_TYPE_descriptor(), name, value);
+}
+enum GAME_TYPE {
+  GAME_TYPE_MAJIANG = 1,
+  GAME_TYPE_NIUNIU = 2,
+  GAME_TYPE_DOUDIZHU = 3
+};
+bool GAME_TYPE_IsValid(int value);
+const GAME_TYPE GAME_TYPE_MIN = GAME_TYPE_MAJIANG;
+const GAME_TYPE GAME_TYPE_MAX = GAME_TYPE_DOUDIZHU;
+const int GAME_TYPE_ARRAYSIZE = GAME_TYPE_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* GAME_TYPE_descriptor();
+inline const ::std::string& GAME_TYPE_Name(GAME_TYPE value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    GAME_TYPE_descriptor(), value);
+}
+inline bool GAME_TYPE_Parse(
+    const ::std::string& name, GAME_TYPE* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<GAME_TYPE>(
+    GAME_TYPE_descriptor(), name, value);
 }
 enum ACTIVITY_TYPE {
   ACTIVITY_CYCLE_TYPE_DIALY = 1,
@@ -1608,7 +1644,7 @@ class MJCard : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 group_count() const;
   inline void set_group_count(::google::protobuf::int32 value);
 
-  // optional int32 cards_count = 5 [default = 9];
+  // optional int32 cards_count = 5 [default = 15];
   inline bool has_cards_count() const;
   inline void clear_cards_count();
   static const int kCardsCountFieldNumber = 5;
@@ -2010,6 +2046,13 @@ class CommonConst : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 player_matching_random_count() const;
   inline void set_player_matching_random_count(::google::protobuf::int32 value);
 
+  // optional int64 clan_id = 27;
+  inline bool has_clan_id() const;
+  inline void clear_clan_id();
+  static const int kClanIdFieldNumber = 27;
+  inline ::google::protobuf::int64 clan_id() const;
+  inline void set_clan_id(::google::protobuf::int64 value);
+
   // @@protoc_insertion_point(class_scope:Adoter.Asset.CommonConst)
  private:
   inline void set_has_type_t();
@@ -2062,6 +2105,8 @@ class CommonConst : public ::google::protobuf::Message {
   inline void clear_has_player_matching_base_count();
   inline void set_has_player_matching_random_count();
   inline void clear_has_player_matching_random_count();
+  inline void set_has_clan_id();
+  inline void clear_has_clan_id();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -2093,6 +2138,7 @@ class CommonConst : public ::google::protobuf::Message {
   ::google::protobuf::int32 shared_reward_id_;
   ::google::protobuf::int32 player_matching_base_count_;
   ::google::protobuf::int32 player_matching_random_count_;
+  ::google::protobuf::int64 clan_id_;
   friend void  protobuf_AddDesc_P_5fAsset_2eproto();
   friend void protobuf_AssignDesc_P_5fAsset_2eproto();
   friend void protobuf_ShutdownFile_P_5fAsset_2eproto();
@@ -3669,6 +3715,13 @@ class RoomOpen : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::RoomOpen_CardCost >*
       mutable_costs();
 
+  // optional .Adoter.Asset.GAME_TYPE game_type = 5;
+  inline bool has_game_type() const;
+  inline void clear_game_type();
+  static const int kGameTypeFieldNumber = 5;
+  inline ::Adoter::Asset::GAME_TYPE game_type() const;
+  inline void set_game_type(::Adoter::Asset::GAME_TYPE value);
+
   // @@protoc_insertion_point(class_scope:Adoter.Asset.RoomOpen)
  private:
   inline void set_has_type_t();
@@ -3677,6 +3730,8 @@ class RoomOpen : public ::google::protobuf::Message {
   inline void clear_has_common_prop();
   inline void set_has_costs_count();
   inline void clear_has_costs_count();
+  inline void set_has_game_type();
+  inline void clear_has_game_type();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -3686,6 +3741,7 @@ class RoomOpen : public ::google::protobuf::Message {
   int type_t_;
   ::google::protobuf::int32 costs_count_;
   ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::RoomOpen_CardCost > costs_;
+  int game_type_;
   friend void  protobuf_AddDesc_P_5fAsset_2eproto();
   friend void protobuf_AssignDesc_P_5fAsset_2eproto();
   friend void protobuf_ShutdownFile_P_5fAsset_2eproto();
@@ -5193,6 +5249,137 @@ class SystemSpeak : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static SystemSpeak* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class ClanLimit : public ::google::protobuf::Message {
+ public:
+  ClanLimit();
+  virtual ~ClanLimit();
+
+  ClanLimit(const ClanLimit& from);
+
+  inline ClanLimit& operator=(const ClanLimit& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ClanLimit& default_instance();
+
+  void Swap(ClanLimit* other);
+
+  // implements Message ----------------------------------------------
+
+  ClanLimit* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const ClanLimit& from);
+  void MergeFrom(const ClanLimit& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .Adoter.Asset.ASSET_TYPE type_t = 1 [default = ASSET_TYPE_CLAN_LIMIT];
+  inline bool has_type_t() const;
+  inline void clear_type_t();
+  static const int kTypeTFieldNumber = 1;
+  inline ::Adoter::Asset::ASSET_TYPE type_t() const;
+  inline void set_type_t(::Adoter::Asset::ASSET_TYPE value);
+
+  // optional .Adoter.Asset.AssetCommonProp common_prop = 2;
+  inline bool has_common_prop() const;
+  inline void clear_common_prop();
+  static const int kCommonPropFieldNumber = 2;
+  inline const ::Adoter::Asset::AssetCommonProp& common_prop() const;
+  inline ::Adoter::Asset::AssetCommonProp* mutable_common_prop();
+  inline ::Adoter::Asset::AssetCommonProp* release_common_prop();
+  inline void set_allocated_common_prop(::Adoter::Asset::AssetCommonProp* common_prop);
+
+  // optional int32 create_upper_limit = 3 [default = 50];
+  inline bool has_create_upper_limit() const;
+  inline void clear_create_upper_limit();
+  static const int kCreateUpperLimitFieldNumber = 3;
+  inline ::google::protobuf::int32 create_upper_limit() const;
+  inline void set_create_upper_limit(::google::protobuf::int32 value);
+
+  // optional int32 join_limit = 4 [default = 10];
+  inline bool has_join_limit() const;
+  inline void clear_join_limit();
+  static const int kJoinLimitFieldNumber = 4;
+  inline ::google::protobuf::int32 join_limit() const;
+  inline void set_join_limit(::google::protobuf::int32 value);
+
+  // optional int32 room_card_limit = 5 [default = 100];
+  inline bool has_room_card_limit() const;
+  inline void clear_room_card_limit();
+  static const int kRoomCardLimitFieldNumber = 5;
+  inline ::google::protobuf::int32 room_card_limit() const;
+  inline void set_room_card_limit(::google::protobuf::int32 value);
+
+  // optional int32 name_limit = 6 [default = 24];
+  inline bool has_name_limit() const;
+  inline void clear_name_limit();
+  static const int kNameLimitFieldNumber = 6;
+  inline ::google::protobuf::int32 name_limit() const;
+  inline void set_name_limit(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:Adoter.Asset.ClanLimit)
+ private:
+  inline void set_has_type_t();
+  inline void clear_has_type_t();
+  inline void set_has_common_prop();
+  inline void clear_has_common_prop();
+  inline void set_has_create_upper_limit();
+  inline void clear_has_create_upper_limit();
+  inline void set_has_join_limit();
+  inline void clear_has_join_limit();
+  inline void set_has_room_card_limit();
+  inline void clear_has_room_card_limit();
+  inline void set_has_name_limit();
+  inline void clear_has_name_limit();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  ::Adoter::Asset::AssetCommonProp* common_prop_;
+  int type_t_;
+  ::google::protobuf::int32 create_upper_limit_;
+  ::google::protobuf::int32 join_limit_;
+  ::google::protobuf::int32 room_card_limit_;
+  ::google::protobuf::int32 name_limit_;
+  friend void  protobuf_AddDesc_P_5fAsset_2eproto();
+  friend void protobuf_AssignDesc_P_5fAsset_2eproto();
+  friend void protobuf_ShutdownFile_P_5fAsset_2eproto();
+
+  void InitAsDefaultInstance();
+  static ClanLimit* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -7159,7 +7346,7 @@ inline void MJCard::set_group_count(::google::protobuf::int32 value) {
   // @@protoc_insertion_point(field_set:Adoter.Asset.MJCard.group_count)
 }
 
-// optional int32 cards_count = 5 [default = 9];
+// optional int32 cards_count = 5 [default = 15];
 inline bool MJCard::has_cards_count() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
@@ -7170,7 +7357,7 @@ inline void MJCard::clear_has_cards_count() {
   _has_bits_[0] &= ~0x00000010u;
 }
 inline void MJCard::clear_cards_count() {
-  cards_count_ = 9;
+  cards_count_ = 15;
   clear_has_cards_count();
 }
 inline ::google::protobuf::int32 MJCard::cards_count() const {
@@ -8043,6 +8230,30 @@ inline void CommonConst::set_player_matching_random_count(::google::protobuf::in
   set_has_player_matching_random_count();
   player_matching_random_count_ = value;
   // @@protoc_insertion_point(field_set:Adoter.Asset.CommonConst.player_matching_random_count)
+}
+
+// optional int64 clan_id = 27;
+inline bool CommonConst::has_clan_id() const {
+  return (_has_bits_[0] & 0x04000000u) != 0;
+}
+inline void CommonConst::set_has_clan_id() {
+  _has_bits_[0] |= 0x04000000u;
+}
+inline void CommonConst::clear_has_clan_id() {
+  _has_bits_[0] &= ~0x04000000u;
+}
+inline void CommonConst::clear_clan_id() {
+  clan_id_ = GOOGLE_LONGLONG(0);
+  clear_has_clan_id();
+}
+inline ::google::protobuf::int64 CommonConst::clan_id() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.CommonConst.clan_id)
+  return clan_id_;
+}
+inline void CommonConst::set_clan_id(::google::protobuf::int64 value) {
+  set_has_clan_id();
+  clan_id_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.CommonConst.clan_id)
 }
 
 // -------------------------------------------------------------------
@@ -9727,6 +9938,31 @@ inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::RoomOpen_CardCost 
 RoomOpen::mutable_costs() {
   // @@protoc_insertion_point(field_mutable_list:Adoter.Asset.RoomOpen.costs)
   return &costs_;
+}
+
+// optional .Adoter.Asset.GAME_TYPE game_type = 5;
+inline bool RoomOpen::has_game_type() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void RoomOpen::set_has_game_type() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void RoomOpen::clear_has_game_type() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void RoomOpen::clear_game_type() {
+  game_type_ = 1;
+  clear_has_game_type();
+}
+inline ::Adoter::Asset::GAME_TYPE RoomOpen::game_type() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.RoomOpen.game_type)
+  return static_cast< ::Adoter::Asset::GAME_TYPE >(game_type_);
+}
+inline void RoomOpen::set_game_type(::Adoter::Asset::GAME_TYPE value) {
+  assert(::Adoter::Asset::GAME_TYPE_IsValid(value));
+  set_has_game_type();
+  game_type_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.RoomOpen.game_type)
 }
 
 // -------------------------------------------------------------------
@@ -11970,6 +12206,172 @@ SystemSpeak::mutable_infomation_list() {
 
 // -------------------------------------------------------------------
 
+// ClanLimit
+
+// optional .Adoter.Asset.ASSET_TYPE type_t = 1 [default = ASSET_TYPE_CLAN_LIMIT];
+inline bool ClanLimit::has_type_t() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ClanLimit::set_has_type_t() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ClanLimit::clear_has_type_t() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ClanLimit::clear_type_t() {
+  type_t_ = 24;
+  clear_has_type_t();
+}
+inline ::Adoter::Asset::ASSET_TYPE ClanLimit::type_t() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanLimit.type_t)
+  return static_cast< ::Adoter::Asset::ASSET_TYPE >(type_t_);
+}
+inline void ClanLimit::set_type_t(::Adoter::Asset::ASSET_TYPE value) {
+  assert(::Adoter::Asset::ASSET_TYPE_IsValid(value));
+  set_has_type_t();
+  type_t_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanLimit.type_t)
+}
+
+// optional .Adoter.Asset.AssetCommonProp common_prop = 2;
+inline bool ClanLimit::has_common_prop() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ClanLimit::set_has_common_prop() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ClanLimit::clear_has_common_prop() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ClanLimit::clear_common_prop() {
+  if (common_prop_ != NULL) common_prop_->::Adoter::Asset::AssetCommonProp::Clear();
+  clear_has_common_prop();
+}
+inline const ::Adoter::Asset::AssetCommonProp& ClanLimit::common_prop() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanLimit.common_prop)
+  return common_prop_ != NULL ? *common_prop_ : *default_instance_->common_prop_;
+}
+inline ::Adoter::Asset::AssetCommonProp* ClanLimit::mutable_common_prop() {
+  set_has_common_prop();
+  if (common_prop_ == NULL) common_prop_ = new ::Adoter::Asset::AssetCommonProp;
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.ClanLimit.common_prop)
+  return common_prop_;
+}
+inline ::Adoter::Asset::AssetCommonProp* ClanLimit::release_common_prop() {
+  clear_has_common_prop();
+  ::Adoter::Asset::AssetCommonProp* temp = common_prop_;
+  common_prop_ = NULL;
+  return temp;
+}
+inline void ClanLimit::set_allocated_common_prop(::Adoter::Asset::AssetCommonProp* common_prop) {
+  delete common_prop_;
+  common_prop_ = common_prop;
+  if (common_prop) {
+    set_has_common_prop();
+  } else {
+    clear_has_common_prop();
+  }
+  // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.ClanLimit.common_prop)
+}
+
+// optional int32 create_upper_limit = 3 [default = 50];
+inline bool ClanLimit::has_create_upper_limit() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void ClanLimit::set_has_create_upper_limit() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void ClanLimit::clear_has_create_upper_limit() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void ClanLimit::clear_create_upper_limit() {
+  create_upper_limit_ = 50;
+  clear_has_create_upper_limit();
+}
+inline ::google::protobuf::int32 ClanLimit::create_upper_limit() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanLimit.create_upper_limit)
+  return create_upper_limit_;
+}
+inline void ClanLimit::set_create_upper_limit(::google::protobuf::int32 value) {
+  set_has_create_upper_limit();
+  create_upper_limit_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanLimit.create_upper_limit)
+}
+
+// optional int32 join_limit = 4 [default = 10];
+inline bool ClanLimit::has_join_limit() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void ClanLimit::set_has_join_limit() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void ClanLimit::clear_has_join_limit() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void ClanLimit::clear_join_limit() {
+  join_limit_ = 10;
+  clear_has_join_limit();
+}
+inline ::google::protobuf::int32 ClanLimit::join_limit() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanLimit.join_limit)
+  return join_limit_;
+}
+inline void ClanLimit::set_join_limit(::google::protobuf::int32 value) {
+  set_has_join_limit();
+  join_limit_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanLimit.join_limit)
+}
+
+// optional int32 room_card_limit = 5 [default = 100];
+inline bool ClanLimit::has_room_card_limit() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void ClanLimit::set_has_room_card_limit() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void ClanLimit::clear_has_room_card_limit() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void ClanLimit::clear_room_card_limit() {
+  room_card_limit_ = 100;
+  clear_has_room_card_limit();
+}
+inline ::google::protobuf::int32 ClanLimit::room_card_limit() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanLimit.room_card_limit)
+  return room_card_limit_;
+}
+inline void ClanLimit::set_room_card_limit(::google::protobuf::int32 value) {
+  set_has_room_card_limit();
+  room_card_limit_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanLimit.room_card_limit)
+}
+
+// optional int32 name_limit = 6 [default = 24];
+inline bool ClanLimit::has_name_limit() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void ClanLimit::set_has_name_limit() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void ClanLimit::clear_has_name_limit() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void ClanLimit::clear_name_limit() {
+  name_limit_ = 24;
+  clear_has_name_limit();
+}
+inline ::google::protobuf::int32 ClanLimit::name_limit() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanLimit.name_limit)
+  return name_limit_;
+}
+inline void ClanLimit::set_name_limit(::google::protobuf::int32 value) {
+  set_has_name_limit();
+  name_limit_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanLimit.name_limit)
+}
+
+// -------------------------------------------------------------------
+
 // Item_CommonProp
 
 // optional .Adoter.Asset.AssetCommonProp common_prop = 1;
@@ -12803,6 +13205,11 @@ template <> struct is_proto_enum< ::Adoter::Asset::FAN_TYPE> : ::google::protobu
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::Adoter::Asset::FAN_TYPE>() {
   return ::Adoter::Asset::FAN_TYPE_descriptor();
+}
+template <> struct is_proto_enum< ::Adoter::Asset::GAME_TYPE> : ::google::protobuf::internal::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::Adoter::Asset::GAME_TYPE>() {
+  return ::Adoter::Asset::GAME_TYPE_descriptor();
 }
 template <> struct is_proto_enum< ::Adoter::Asset::ACTIVITY_TYPE> : ::google::protobuf::internal::true_type {};
 template <>

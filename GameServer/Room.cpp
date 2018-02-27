@@ -253,9 +253,11 @@ void Room::OnPlayerOperate(std::shared_ptr<Player> player, pb::Message* message)
 	
 	switch(game_operate->oper_type())
 	{
-		case Asset::GAME_OPER_TYPE_START: //开始游戏：其实是个准备
+		case Asset::GAME_OPER_TYPE_START: //开始游戏：准备//扑克押注
 		{
 			if (!CanStarGame()) return;
+
+			SelectBanker(); //选庄
 
 			_game = std::make_shared<Game>();
 
@@ -353,6 +355,12 @@ void Room::OnPlayerOperate(std::shared_ptr<Player> player, pb::Message* message)
 			OnDisMiss(player->GetID(), game_operate);
 
 			ClearDisMiss();
+		}
+		break;
+
+		case Asset::GAME_OPER_TYPE_JIAOZHUANG: //叫庄
+		{
+			OnJiaoZhuang(player->GetID(), game_operate->beilv());
 		}
 		break;
 		
@@ -504,6 +512,7 @@ bool Room::HasBaoSanJia()
 	
 int32_t Room::GetMultiple(int32_t fan_type)
 {
+	/*
 	const auto fan_asset = GetFan();
 	if (!fan_asset) return 0;
 
@@ -513,8 +522,12 @@ int32_t Room::GetMultiple(int32_t fan_type)
 	if (it == fan_asset->fans().end()) return 0;
 
 	return it->multiple();
+	*/
+
+	return 0;
 }
 	
+/*
 const Asset::NiuNiuRoomFan* Room::GetFan()
 {
 	auto message = AssetInstance.Get(g_const->niuniu_fan_id());
@@ -525,6 +538,7 @@ const Asset::NiuNiuRoomFan* Room::GetFan()
 
 	return fan;
 }
+*/
 
 bool Room::Remove(int64_t player_id, Asset::GAME_OPER_TYPE reason)
 {
@@ -614,6 +628,7 @@ void Room::OnGameOver(int64_t player_id)
 	
 	if (!IsFriend()) return; //非好友房没有总结算
 	
+	/*
 	AddHupai(player_id); //记录
 
 	if (player_id != 0 && _banker != player_id) 
@@ -638,6 +653,7 @@ void Room::OnGameOver(int64_t player_id)
 	{
 		++_streak_wins[player_id];
 	}
+	*/
 
 	if (!HasBeenOver() && !HasDisMiss()) return; //没有对局结束，且没有解散房间
 
@@ -648,7 +664,6 @@ void Room::OnGameOver(int64_t player_id)
 		if (!player) continue;
 		if (_history.list().size()) player->AddRoomRecord(GetID());
 	}
-
 	//
 	//总结算界面弹出
 	//
@@ -784,6 +799,39 @@ void Room::DoDisMiss()
 	if (_game) { _game->OnGameOver(0); } //当前局数结束
 	else { OnGameOver(); }
 }
+
+void Room::OnJiaoZhuang(int64_t player_id, int32_t beilv)
+{
+	if (player_id <= 0 || beilv <= 0) return;
+
+	_jiao_zhuang[player_id] = beilv;
+}
+
+void Room::SelectBanker()
+{
+	int64_t banker_id = 0, beilv = 0;
+
+	std::vector<int64_t> bankers;
+
+	for (auto zhuang : _jiao_zhuang)
+	{
+		if (zhuang.second >= beilv) 
+		{
+			banker_id = zhuang.first;	
+			beilv = zhuang.second;
+
+			bankers.push_back(banker_id); //最后从分数高的玩家中随机选择庄家
+		}
+	}
+
+	if (bankers.size() == 0) return;
+
+	std::random_shuffle(bankers.begin(), bankers.end());
+
+	_banker = bankers[0];
+	_banker_index = GetPlayerOrder(_banker);
+}
+	
 	
 void Room::KickOutPlayer(int64_t player_id)
 {

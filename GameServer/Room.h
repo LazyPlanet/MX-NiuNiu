@@ -42,6 +42,7 @@ private:
 	int32_t _dismiss_time = 0; //解散时间
 	int32_t _created_time = 0; //创建时间
 	int32_t _dismiss_cooldown = 0; //解散冷却时间
+	std::unordered_map<int64_t, int32_t> _jiao_zhuang; //倍率表
 public:
 	explicit Room(Asset::Room room) {  _stuff = room; }
 	void SetGmtOpened() { _gmt_opened = true; }
@@ -61,7 +62,7 @@ public:
 	const Asset::RoomOptions& GetOptions() { return _stuff.options(); } //额外番型
 	void SetOptions(const Asset::RoomOptions& options) {	_stuff.mutable_options()->CopyFrom(options);}
 
-	const Asset::NiuNiuRoomFan* GetFan(); //获取番数数据
+	//const Asset::NiuNiuRoomFan* GetFan(); //获取番数数据
 	int32_t GetMultiple(int32_t fan_type);
 	int32_t MaxFan() { return _stuff.options().top_mutiple(); }
 	Asset::CITY_TYPE GetCity() { return _stuff.options().city_type(); } //城市玩法
@@ -152,6 +153,9 @@ public:
 	int64_t GetBanker() { return _banker; } //获取庄家
 	int32_t GetBankerIndex() { return _banker_index; } //庄家索引
 	bool IsBanker(int64_t player_id){ return _banker == player_id; } //是否是庄家
+	void OnJiaoZhuang(int64_t player_id, int32_t beilv); //叫庄//倍率或分数//扑克游戏
+	void SelectBanker();
+
 	int32_t GetPlayerOrder(int32_t player_id); //获取玩家的顺序
 
 	bool IsExpired(); //是否过期

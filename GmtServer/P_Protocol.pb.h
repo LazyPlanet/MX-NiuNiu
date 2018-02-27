@@ -58,6 +58,10 @@ class Mail;
 class Player;
 class Inventory;
 class Inventory_Element;
+class SystemMessage;
+class Clan;
+class Clan_Member;
+class Clan_RoomHistory;
 class ItemEquipment;
 class Meta;
 class CreatePlayer;
@@ -96,6 +100,7 @@ class LoadScene;
 class ReConnect;
 class MatchStats;
 class MatchStats_MatchingRoom;
+class ClanOperation;
 class PlayerList;
 class PlayerInformation;
 class AlertMessage;
@@ -138,6 +143,8 @@ class RegisterServer;
 class KickOutPlayer;
 class GmtInnerMeta;
 class PlayerState;
+class ClanRoomStatusChanged;
+class ClanRoomSync;
 
 enum EnterRoom_ENTER_TYPE {
   EnterRoom_ENTER_TYPE_ENTER_TYPE_ENTER = 1,
@@ -160,11 +167,12 @@ inline bool EnterRoom_ENTER_TYPE_Parse(
 }
 enum RandomSaizi_REASON_TYPE {
   RandomSaizi_REASON_TYPE_REASON_TYPE_START = 1,
-  RandomSaizi_REASON_TYPE_REASON_TYPE_TINGPAI = 2
+  RandomSaizi_REASON_TYPE_REASON_TYPE_TINGPAI = 2,
+  RandomSaizi_REASON_TYPE_REASON_TYPE_HUIPAI = 3
 };
 bool RandomSaizi_REASON_TYPE_IsValid(int value);
 const RandomSaizi_REASON_TYPE RandomSaizi_REASON_TYPE_REASON_TYPE_MIN = RandomSaizi_REASON_TYPE_REASON_TYPE_START;
-const RandomSaizi_REASON_TYPE RandomSaizi_REASON_TYPE_REASON_TYPE_MAX = RandomSaizi_REASON_TYPE_REASON_TYPE_TINGPAI;
+const RandomSaizi_REASON_TYPE RandomSaizi_REASON_TYPE_REASON_TYPE_MAX = RandomSaizi_REASON_TYPE_REASON_TYPE_HUIPAI;
 const int RandomSaizi_REASON_TYPE_REASON_TYPE_ARRAYSIZE = RandomSaizi_REASON_TYPE_REASON_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* RandomSaizi_REASON_TYPE_descriptor();
@@ -323,11 +331,13 @@ enum ROOM_CARD_CHANGED_TYPE {
   ROOM_CARD_CHANGED_TYPE_MALL = 2,
   ROOM_CARD_CHANGED_TYPE_OPEN_ROOM = 3,
   ROOM_CARD_CHANGED_TYPE_FANBEI = 4,
-  ROOM_CARD_CHANGED_TYPE_GENERAL_REWARD = 5
+  ROOM_CARD_CHANGED_TYPE_GENERAL_REWARD = 5,
+  ROOM_CARD_CHANGED_TYPE_CREATE_CLAN = 6,
+  ROOM_CARD_CHANGED_TYPE_RECHARGE_CLAN = 7
 };
 bool ROOM_CARD_CHANGED_TYPE_IsValid(int value);
 const ROOM_CARD_CHANGED_TYPE ROOM_CARD_CHANGED_TYPE_MIN = ROOM_CARD_CHANGED_TYPE_GMT;
-const ROOM_CARD_CHANGED_TYPE ROOM_CARD_CHANGED_TYPE_MAX = ROOM_CARD_CHANGED_TYPE_GENERAL_REWARD;
+const ROOM_CARD_CHANGED_TYPE ROOM_CARD_CHANGED_TYPE_MAX = ROOM_CARD_CHANGED_TYPE_RECHARGE_CLAN;
 const int ROOM_CARD_CHANGED_TYPE_ARRAYSIZE = ROOM_CARD_CHANGED_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* ROOM_CARD_CHANGED_TYPE_descriptor();
@@ -400,6 +410,26 @@ inline bool LOAD_SCENE_TYPE_Parse(
     const ::std::string& name, LOAD_SCENE_TYPE* value) {
   return ::google::protobuf::internal::ParseNamedEnum<LOAD_SCENE_TYPE>(
     LOAD_SCENE_TYPE_descriptor(), name, value);
+}
+enum CLAN_MEM_STATUS_TYPE {
+  CLAN_MEM_STATUS_TYPE_GAMING = 1,
+  CLAN_MEM_STATUS_TYPE_AVAILABLE = 2,
+  CLAN_MEM_STATUS_TYPE_OFFLINE = 3
+};
+bool CLAN_MEM_STATUS_TYPE_IsValid(int value);
+const CLAN_MEM_STATUS_TYPE CLAN_MEM_STATUS_TYPE_MIN = CLAN_MEM_STATUS_TYPE_GAMING;
+const CLAN_MEM_STATUS_TYPE CLAN_MEM_STATUS_TYPE_MAX = CLAN_MEM_STATUS_TYPE_OFFLINE;
+const int CLAN_MEM_STATUS_TYPE_ARRAYSIZE = CLAN_MEM_STATUS_TYPE_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* CLAN_MEM_STATUS_TYPE_descriptor();
+inline const ::std::string& CLAN_MEM_STATUS_TYPE_Name(CLAN_MEM_STATUS_TYPE value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    CLAN_MEM_STATUS_TYPE_descriptor(), value);
+}
+inline bool CLAN_MEM_STATUS_TYPE_Parse(
+    const ::std::string& name, CLAN_MEM_STATUS_TYPE* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<CLAN_MEM_STATUS_TYPE>(
+    CLAN_MEM_STATUS_TYPE_descriptor(), name, value);
 }
 enum ERROR_TYPE {
   ERROR_TYPE_NORMAL = 1,
@@ -478,11 +508,22 @@ enum ERROR_CODE {
   ERROR_GAME_PAI_UNSATISFIED = 41,
   ERROR_COMMON_REWARD_DATA = 50,
   ERROR_COMMON_REWARD_HAS_GOT = 51,
-  ERROR_COOLDOWN_MATCHING = 60
+  ERROR_COOLDOWN_MATCHING = 60,
+  ERROR_CLAN_NAME_EMPTY = 71,
+  ERROR_CLAN_NAME_UPPER = 72,
+  ERROR_CLAN_HOSTER_UPPER = 73,
+  ERROR_CLAN_JOIN_UPPER = 74,
+  ERROR_CLAN_CREATE_INNER = 75,
+  ERROR_CLAN_FULL = 76,
+  ERROR_CLAN_ROOM_CARD_NOT_ENOUGH = 77,
+  ERROR_CLAN_NOT_FOUND = 78,
+  ERROR_CLAN_NO_PERMISSION = 79,
+  ERROR_CLAN_NO_RECORD = 80,
+  ERROR_CLAN_HAS_JOINED = 81
 };
 bool ERROR_CODE_IsValid(int value);
 const ERROR_CODE ERROR_CODE_MIN = ERROR_SUCCESS;
-const ERROR_CODE ERROR_CODE_MAX = ERROR_COOLDOWN_MATCHING;
+const ERROR_CODE ERROR_CODE_MAX = ERROR_CLAN_HAS_JOINED;
 const int ERROR_CODE_ARRAYSIZE = ERROR_CODE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* ERROR_CODE_descriptor();
@@ -516,6 +557,7 @@ enum META_TYPE {
   META_TYPE_SHARE_RECHARGE = 18,
   META_TYPE_SHARE_PLAY_BACK = 19,
   META_TYPE_SHARE_MATCHING_STATS = 20,
+  META_TYPE_SHARE_CLAN_OPERATION = 21,
   META_TYPE_SHARE_COUNT = 50,
   META_TYPE_C2S_BEGIN = 51,
   META_TYPE_C2S_LOGIN = 52,
@@ -562,11 +604,13 @@ enum META_TYPE {
   META_TYPE_S2S_REGISTER = 1001,
   META_TYPE_S2S_KICKOUT_PLAYER = 1002,
   META_TYPE_S2S_GMT_INNER_META = 1003,
-  META_TYPE_S2S_PLAYER_STATE = 1004
+  META_TYPE_S2S_PLAYER_STATE = 1004,
+  META_TYPE_S2S_CLAN_ROOM_START_OR_OVER = 1005,
+  META_TYPE_S2S_CLAN_ROOM_SYNC = 1006
 };
 bool META_TYPE_IsValid(int value);
 const META_TYPE META_TYPE_MIN = META_TYPE_SHARE_BEGIN;
-const META_TYPE META_TYPE_MAX = META_TYPE_S2S_PLAYER_STATE;
+const META_TYPE META_TYPE_MAX = META_TYPE_S2S_CLAN_ROOM_SYNC;
 const int META_TYPE_ARRAYSIZE = META_TYPE_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* META_TYPE_descriptor();
@@ -695,7 +739,8 @@ enum PAI_OPER_TYPE {
   PAI_OPER_TYPE_FAPAI = 13,
   PAI_OPER_TYPE_LIUJU = 14,
   PAI_OPER_TYPE_CANCEL = 15,
-  PAI_OPER_TYPE_COUNT = 16
+  PAI_OPER_TYPE_HUIPAI = 16,
+  PAI_OPER_TYPE_COUNT = 17
 };
 bool PAI_OPER_TYPE_IsValid(int value);
 const PAI_OPER_TYPE PAI_OPER_TYPE_MIN = PAI_OPER_TYPE_BEGIN;
@@ -737,6 +782,34 @@ inline bool GAME_OPER_TYPE_Parse(
     const ::std::string& name, GAME_OPER_TYPE* value) {
   return ::google::protobuf::internal::ParseNamedEnum<GAME_OPER_TYPE>(
     GAME_OPER_TYPE_descriptor(), name, value);
+}
+enum CLAN_OPER_TYPE {
+  CLAN_OPER_TYPE_CREATE = 1,
+  CLAN_OPER_TYPE_JOIN = 2,
+  CLAN_OPER_TYPE_EDIT = 3,
+  CLAN_OPER_TYPE_DISMISS = 4,
+  CLAN_OPER_TYPE_RECHARGE = 5,
+  CLAN_OPER_TYPE_MEMEBER_AGEE = 6,
+  CLAN_OPER_TYPE_MEMEBER_DISAGEE = 7,
+  CLAN_OPER_TYPE_MEMEBER_DELETE = 8,
+  CLAN_OPER_TYPE_MEMEBER_QUIT = 9,
+  CLAN_OPER_TYPE_MEMEBER_QUERY = 10,
+  CLAN_OPER_TYPE_ROOM_LIST_QUERY = 11
+};
+bool CLAN_OPER_TYPE_IsValid(int value);
+const CLAN_OPER_TYPE CLAN_OPER_TYPE_MIN = CLAN_OPER_TYPE_CREATE;
+const CLAN_OPER_TYPE CLAN_OPER_TYPE_MAX = CLAN_OPER_TYPE_ROOM_LIST_QUERY;
+const int CLAN_OPER_TYPE_ARRAYSIZE = CLAN_OPER_TYPE_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* CLAN_OPER_TYPE_descriptor();
+inline const ::std::string& CLAN_OPER_TYPE_Name(CLAN_OPER_TYPE value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    CLAN_OPER_TYPE_descriptor(), value);
+}
+inline bool CLAN_OPER_TYPE_Parse(
+    const ::std::string& name, CLAN_OPER_TYPE* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<CLAN_OPER_TYPE>(
+    CLAN_OPER_TYPE_descriptor(), name, value);
 }
 enum ROOM_SYNC_TYPE {
   ROOM_SYNC_TYPE_NORMAL = 1,
@@ -839,6 +912,25 @@ inline bool ROLE_TYPE_Parse(
     const ::std::string& name, ROLE_TYPE* value) {
   return ::google::protobuf::internal::ParseNamedEnum<ROLE_TYPE>(
     ROLE_TYPE_descriptor(), name, value);
+}
+enum CLAN_ROOM_STATUS_TYPE {
+  CLAN_ROOM_STATUS_TYPE_START = 1,
+  CLAN_ROOM_STATUS_TYPE_OVER = 2
+};
+bool CLAN_ROOM_STATUS_TYPE_IsValid(int value);
+const CLAN_ROOM_STATUS_TYPE CLAN_ROOM_STATUS_TYPE_MIN = CLAN_ROOM_STATUS_TYPE_START;
+const CLAN_ROOM_STATUS_TYPE CLAN_ROOM_STATUS_TYPE_MAX = CLAN_ROOM_STATUS_TYPE_OVER;
+const int CLAN_ROOM_STATUS_TYPE_ARRAYSIZE = CLAN_ROOM_STATUS_TYPE_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* CLAN_ROOM_STATUS_TYPE_descriptor();
+inline const ::std::string& CLAN_ROOM_STATUS_TYPE_Name(CLAN_ROOM_STATUS_TYPE value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    CLAN_ROOM_STATUS_TYPE_descriptor(), value);
+}
+inline bool CLAN_ROOM_STATUS_TYPE_Parse(
+    const ::std::string& name, CLAN_ROOM_STATUS_TYPE* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<CLAN_ROOM_STATUS_TYPE>(
+    CLAN_ROOM_STATUS_TYPE_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -1340,6 +1432,18 @@ class User : public ::google::protobuf::Message {
   inline ::google::protobuf::int32 created_time() const;
   inline void set_created_time(::google::protobuf::int32 value);
 
+  // optional bytes daili_acount = 6;
+  inline bool has_daili_acount() const;
+  inline void clear_daili_acount();
+  static const int kDailiAcountFieldNumber = 6;
+  inline const ::std::string& daili_acount() const;
+  inline void set_daili_acount(const ::std::string& value);
+  inline void set_daili_acount(const char* value);
+  inline void set_daili_acount(const void* value, size_t size);
+  inline ::std::string* mutable_daili_acount();
+  inline ::std::string* release_daili_acount();
+  inline void set_allocated_daili_acount(::std::string* daili_acount);
+
   // @@protoc_insertion_point(class_scope:Adoter.Asset.User)
  private:
   inline void set_has_account();
@@ -1350,6 +1454,8 @@ class User : public ::google::protobuf::Message {
   inline void clear_has_client_info();
   inline void set_has_created_time();
   inline void clear_has_created_time();
+  inline void set_has_daili_acount();
+  inline void clear_has_daili_acount();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -1359,6 +1465,7 @@ class User : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedField< ::google::protobuf::int64 > player_list_;
   ::Adoter::Asset::WechatUnion* wechat_;
   ::Adoter::Asset::ClientInfomation* client_info_;
+  ::std::string* daili_acount_;
   ::google::protobuf::int32 created_time_;
   friend void  protobuf_AddDesc_P_5fProtocol_2eproto();
   friend void protobuf_AssignDesc_P_5fProtocol_2eproto();
@@ -3229,6 +3336,30 @@ class Player : public ::google::protobuf::Message {
   inline ::Adoter::Asset::ROOM_TYPE matching_room_type() const;
   inline void set_matching_room_type(::Adoter::Asset::ROOM_TYPE value);
 
+  // repeated int64 clan_hosters = 17;
+  inline int clan_hosters_size() const;
+  inline void clear_clan_hosters();
+  static const int kClanHostersFieldNumber = 17;
+  inline ::google::protobuf::int64 clan_hosters(int index) const;
+  inline void set_clan_hosters(int index, ::google::protobuf::int64 value);
+  inline void add_clan_hosters(::google::protobuf::int64 value);
+  inline const ::google::protobuf::RepeatedField< ::google::protobuf::int64 >&
+      clan_hosters() const;
+  inline ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
+      mutable_clan_hosters();
+
+  // repeated int64 clan_joiners = 18;
+  inline int clan_joiners_size() const;
+  inline void clear_clan_joiners();
+  static const int kClanJoinersFieldNumber = 18;
+  inline ::google::protobuf::int64 clan_joiners(int index) const;
+  inline void set_clan_joiners(int index, ::google::protobuf::int64 value);
+  inline void add_clan_joiners(::google::protobuf::int64 value);
+  inline const ::google::protobuf::RepeatedField< ::google::protobuf::int64 >&
+      clan_joiners() const;
+  inline ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
+      mutable_clan_joiners();
+
   // @@protoc_insertion_point(class_scope:Adoter.Asset.Player)
  private:
   inline void set_has_common_prop();
@@ -3276,6 +3407,8 @@ class Player : public ::google::protobuf::Message {
   ::google::protobuf::int64 room_id_;
   bool card_count_changed_;
   int matching_room_type_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int64 > clan_hosters_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int64 > clan_joiners_;
   friend void  protobuf_AddDesc_P_5fProtocol_2eproto();
   friend void protobuf_AssignDesc_P_5fProtocol_2eproto();
   friend void protobuf_ShutdownFile_P_5fProtocol_2eproto();
@@ -3458,6 +3591,532 @@ class Inventory : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static Inventory* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class SystemMessage : public ::google::protobuf::Message {
+ public:
+  SystemMessage();
+  virtual ~SystemMessage();
+
+  SystemMessage(const SystemMessage& from);
+
+  inline SystemMessage& operator=(const SystemMessage& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const SystemMessage& default_instance();
+
+  void Swap(SystemMessage* other);
+
+  // implements Message ----------------------------------------------
+
+  SystemMessage* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const SystemMessage& from);
+  void MergeFrom(const SystemMessage& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int64 player_id = 1;
+  inline bool has_player_id() const;
+  inline void clear_player_id();
+  static const int kPlayerIdFieldNumber = 1;
+  inline ::google::protobuf::int64 player_id() const;
+  inline void set_player_id(::google::protobuf::int64 value);
+
+  // optional bytes name = 2;
+  inline bool has_name() const;
+  inline void clear_name();
+  static const int kNameFieldNumber = 2;
+  inline const ::std::string& name() const;
+  inline void set_name(const ::std::string& value);
+  inline void set_name(const char* value);
+  inline void set_name(const void* value, size_t size);
+  inline ::std::string* mutable_name();
+  inline ::std::string* release_name();
+  inline void set_allocated_name(::std::string* name);
+
+  // optional int32 oper_time = 3;
+  inline bool has_oper_time() const;
+  inline void clear_oper_time();
+  static const int kOperTimeFieldNumber = 3;
+  inline ::google::protobuf::int32 oper_time() const;
+  inline void set_oper_time(::google::protobuf::int32 value);
+
+  // optional .Adoter.Asset.CLAN_OPER_TYPE oper_type = 4;
+  inline bool has_oper_type() const;
+  inline void clear_oper_type();
+  static const int kOperTypeFieldNumber = 4;
+  inline ::Adoter::Asset::CLAN_OPER_TYPE oper_type() const;
+  inline void set_oper_type(::Adoter::Asset::CLAN_OPER_TYPE value);
+
+  // @@protoc_insertion_point(class_scope:Adoter.Asset.SystemMessage)
+ private:
+  inline void set_has_player_id();
+  inline void clear_has_player_id();
+  inline void set_has_name();
+  inline void clear_has_name();
+  inline void set_has_oper_time();
+  inline void clear_has_oper_time();
+  inline void set_has_oper_type();
+  inline void clear_has_oper_type();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  ::google::protobuf::int64 player_id_;
+  ::std::string* name_;
+  ::google::protobuf::int32 oper_time_;
+  int oper_type_;
+  friend void  protobuf_AddDesc_P_5fProtocol_2eproto();
+  friend void protobuf_AssignDesc_P_5fProtocol_2eproto();
+  friend void protobuf_ShutdownFile_P_5fProtocol_2eproto();
+
+  void InitAsDefaultInstance();
+  static SystemMessage* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class Clan_Member : public ::google::protobuf::Message {
+ public:
+  Clan_Member();
+  virtual ~Clan_Member();
+
+  Clan_Member(const Clan_Member& from);
+
+  inline Clan_Member& operator=(const Clan_Member& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Clan_Member& default_instance();
+
+  void Swap(Clan_Member* other);
+
+  // implements Message ----------------------------------------------
+
+  Clan_Member* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Clan_Member& from);
+  void MergeFrom(const Clan_Member& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int64 player_id = 1;
+  inline bool has_player_id() const;
+  inline void clear_player_id();
+  static const int kPlayerIdFieldNumber = 1;
+  inline ::google::protobuf::int64 player_id() const;
+  inline void set_player_id(::google::protobuf::int64 value);
+
+  // optional bytes name = 2;
+  inline bool has_name() const;
+  inline void clear_name();
+  static const int kNameFieldNumber = 2;
+  inline const ::std::string& name() const;
+  inline void set_name(const ::std::string& value);
+  inline void set_name(const char* value);
+  inline void set_name(const void* value, size_t size);
+  inline ::std::string* mutable_name();
+  inline ::std::string* release_name();
+  inline void set_allocated_name(::std::string* name);
+
+  // optional .Adoter.Asset.CLAN_MEM_STATUS_TYPE status = 3;
+  inline bool has_status() const;
+  inline void clear_status();
+  static const int kStatusFieldNumber = 3;
+  inline ::Adoter::Asset::CLAN_MEM_STATUS_TYPE status() const;
+  inline void set_status(::Adoter::Asset::CLAN_MEM_STATUS_TYPE value);
+
+  // @@protoc_insertion_point(class_scope:Adoter.Asset.Clan.Member)
+ private:
+  inline void set_has_player_id();
+  inline void clear_has_player_id();
+  inline void set_has_name();
+  inline void clear_has_name();
+  inline void set_has_status();
+  inline void clear_has_status();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  ::google::protobuf::int64 player_id_;
+  ::std::string* name_;
+  int status_;
+  friend void  protobuf_AddDesc_P_5fProtocol_2eproto();
+  friend void protobuf_AssignDesc_P_5fProtocol_2eproto();
+  friend void protobuf_ShutdownFile_P_5fProtocol_2eproto();
+
+  void InitAsDefaultInstance();
+  static Clan_Member* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class Clan_RoomHistory : public ::google::protobuf::Message {
+ public:
+  Clan_RoomHistory();
+  virtual ~Clan_RoomHistory();
+
+  Clan_RoomHistory(const Clan_RoomHistory& from);
+
+  inline Clan_RoomHistory& operator=(const Clan_RoomHistory& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Clan_RoomHistory& default_instance();
+
+  void Swap(Clan_RoomHistory* other);
+
+  // implements Message ----------------------------------------------
+
+  Clan_RoomHistory* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Clan_RoomHistory& from);
+  void MergeFrom(const Clan_RoomHistory& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int64 room_id = 1;
+  inline bool has_room_id() const;
+  inline void clear_room_id();
+  static const int kRoomIdFieldNumber = 1;
+  inline ::google::protobuf::int64 room_id() const;
+  inline void set_room_id(::google::protobuf::int64 value);
+
+  // optional int32 battle_time = 2;
+  inline bool has_battle_time() const;
+  inline void clear_battle_time();
+  static const int kBattleTimeFieldNumber = 2;
+  inline ::google::protobuf::int32 battle_time() const;
+  inline void set_battle_time(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:Adoter.Asset.Clan.RoomHistory)
+ private:
+  inline void set_has_room_id();
+  inline void clear_has_room_id();
+  inline void set_has_battle_time();
+  inline void clear_has_battle_time();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  ::google::protobuf::int64 room_id_;
+  ::google::protobuf::int32 battle_time_;
+  friend void  protobuf_AddDesc_P_5fProtocol_2eproto();
+  friend void protobuf_AssignDesc_P_5fProtocol_2eproto();
+  friend void protobuf_ShutdownFile_P_5fProtocol_2eproto();
+
+  void InitAsDefaultInstance();
+  static Clan_RoomHistory* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class Clan : public ::google::protobuf::Message {
+ public:
+  Clan();
+  virtual ~Clan();
+
+  Clan(const Clan& from);
+
+  inline Clan& operator=(const Clan& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Clan& default_instance();
+
+  void Swap(Clan* other);
+
+  // implements Message ----------------------------------------------
+
+  Clan* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const Clan& from);
+  void MergeFrom(const Clan& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef Clan_Member Member;
+  typedef Clan_RoomHistory RoomHistory;
+
+  // accessors -------------------------------------------------------
+
+  // optional int64 clan_id = 1;
+  inline bool has_clan_id() const;
+  inline void clear_clan_id();
+  static const int kClanIdFieldNumber = 1;
+  inline ::google::protobuf::int64 clan_id() const;
+  inline void set_clan_id(::google::protobuf::int64 value);
+
+  // optional bytes name = 2;
+  inline bool has_name() const;
+  inline void clear_name();
+  static const int kNameFieldNumber = 2;
+  inline const ::std::string& name() const;
+  inline void set_name(const ::std::string& value);
+  inline void set_name(const char* value);
+  inline void set_name(const void* value, size_t size);
+  inline ::std::string* mutable_name();
+  inline ::std::string* release_name();
+  inline void set_allocated_name(::std::string* name);
+
+  // optional int32 created_time = 3;
+  inline bool has_created_time() const;
+  inline void clear_created_time();
+  static const int kCreatedTimeFieldNumber = 3;
+  inline ::google::protobuf::int32 created_time() const;
+  inline void set_created_time(::google::protobuf::int32 value);
+
+  // optional int64 hoster_id = 4;
+  inline bool has_hoster_id() const;
+  inline void clear_hoster_id();
+  static const int kHosterIdFieldNumber = 4;
+  inline ::google::protobuf::int64 hoster_id() const;
+  inline void set_hoster_id(::google::protobuf::int64 value);
+
+  // optional bytes hoster_name = 5;
+  inline bool has_hoster_name() const;
+  inline void clear_hoster_name();
+  static const int kHosterNameFieldNumber = 5;
+  inline const ::std::string& hoster_name() const;
+  inline void set_hoster_name(const ::std::string& value);
+  inline void set_hoster_name(const char* value);
+  inline void set_hoster_name(const void* value, size_t size);
+  inline ::std::string* mutable_hoster_name();
+  inline ::std::string* release_hoster_name();
+  inline void set_allocated_hoster_name(::std::string* hoster_name);
+
+  // optional int64 room_card_count = 6;
+  inline bool has_room_card_count() const;
+  inline void clear_room_card_count();
+  static const int kRoomCardCountFieldNumber = 6;
+  inline ::google::protobuf::int64 room_card_count() const;
+  inline void set_room_card_count(::google::protobuf::int64 value);
+
+  // optional bytes announcement = 7;
+  inline bool has_announcement() const;
+  inline void clear_announcement();
+  static const int kAnnouncementFieldNumber = 7;
+  inline const ::std::string& announcement() const;
+  inline void set_announcement(const ::std::string& value);
+  inline void set_announcement(const char* value);
+  inline void set_announcement(const void* value, size_t size);
+  inline ::std::string* mutable_announcement();
+  inline ::std::string* release_announcement();
+  inline void set_allocated_announcement(::std::string* announcement);
+
+  // repeated .Adoter.Asset.Clan.Member member_list = 8;
+  inline int member_list_size() const;
+  inline void clear_member_list();
+  static const int kMemberListFieldNumber = 8;
+  inline const ::Adoter::Asset::Clan_Member& member_list(int index) const;
+  inline ::Adoter::Asset::Clan_Member* mutable_member_list(int index);
+  inline ::Adoter::Asset::Clan_Member* add_member_list();
+  inline const ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::Clan_Member >&
+      member_list() const;
+  inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::Clan_Member >*
+      mutable_member_list();
+
+  // optional bool dismiss = 9;
+  inline bool has_dismiss() const;
+  inline void clear_dismiss();
+  static const int kDismissFieldNumber = 9;
+  inline bool dismiss() const;
+  inline void set_dismiss(bool value);
+
+  // repeated .Adoter.Asset.Clan.RoomHistory battle_history = 10;
+  inline int battle_history_size() const;
+  inline void clear_battle_history();
+  static const int kBattleHistoryFieldNumber = 10;
+  inline const ::Adoter::Asset::Clan_RoomHistory& battle_history(int index) const;
+  inline ::Adoter::Asset::Clan_RoomHistory* mutable_battle_history(int index);
+  inline ::Adoter::Asset::Clan_RoomHistory* add_battle_history();
+  inline const ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::Clan_RoomHistory >&
+      battle_history() const;
+  inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::Clan_RoomHistory >*
+      mutable_battle_history();
+
+  // repeated .Adoter.Asset.SystemMessage message_list = 11;
+  inline int message_list_size() const;
+  inline void clear_message_list();
+  static const int kMessageListFieldNumber = 11;
+  inline const ::Adoter::Asset::SystemMessage& message_list(int index) const;
+  inline ::Adoter::Asset::SystemMessage* mutable_message_list(int index);
+  inline ::Adoter::Asset::SystemMessage* add_message_list();
+  inline const ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::SystemMessage >&
+      message_list() const;
+  inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::SystemMessage >*
+      mutable_message_list();
+
+  // repeated int64 room_list = 12;
+  inline int room_list_size() const;
+  inline void clear_room_list();
+  static const int kRoomListFieldNumber = 12;
+  inline ::google::protobuf::int64 room_list(int index) const;
+  inline void set_room_list(int index, ::google::protobuf::int64 value);
+  inline void add_room_list(::google::protobuf::int64 value);
+  inline const ::google::protobuf::RepeatedField< ::google::protobuf::int64 >&
+      room_list() const;
+  inline ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
+      mutable_room_list();
+
+  // @@protoc_insertion_point(class_scope:Adoter.Asset.Clan)
+ private:
+  inline void set_has_clan_id();
+  inline void clear_has_clan_id();
+  inline void set_has_name();
+  inline void clear_has_name();
+  inline void set_has_created_time();
+  inline void clear_has_created_time();
+  inline void set_has_hoster_id();
+  inline void clear_has_hoster_id();
+  inline void set_has_hoster_name();
+  inline void clear_has_hoster_name();
+  inline void set_has_room_card_count();
+  inline void clear_has_room_card_count();
+  inline void set_has_announcement();
+  inline void clear_has_announcement();
+  inline void set_has_dismiss();
+  inline void clear_has_dismiss();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  ::google::protobuf::int64 clan_id_;
+  ::std::string* name_;
+  ::google::protobuf::int64 hoster_id_;
+  ::std::string* hoster_name_;
+  ::google::protobuf::int64 room_card_count_;
+  ::google::protobuf::int32 created_time_;
+  bool dismiss_;
+  ::std::string* announcement_;
+  ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::Clan_Member > member_list_;
+  ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::Clan_RoomHistory > battle_history_;
+  ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::SystemMessage > message_list_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int64 > room_list_;
+  friend void  protobuf_AddDesc_P_5fProtocol_2eproto();
+  friend void protobuf_AssignDesc_P_5fProtocol_2eproto();
+  friend void protobuf_ShutdownFile_P_5fProtocol_2eproto();
+
+  void InitAsDefaultInstance();
+  static Clan* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -5112,6 +5771,13 @@ class Room : public ::google::protobuf::Message {
   inline ::Adoter::Asset::RoomOptions* release_options();
   inline void set_allocated_options(::Adoter::Asset::RoomOptions* options);
 
+  // optional int64 clan_id = 5;
+  inline bool has_clan_id() const;
+  inline void clear_clan_id();
+  static const int kClanIdFieldNumber = 5;
+  inline ::google::protobuf::int64 clan_id() const;
+  inline void set_clan_id(::google::protobuf::int64 value);
+
   // @@protoc_insertion_point(class_scope:Adoter.Asset.Room)
  private:
   inline void set_has_room_id();
@@ -5122,6 +5788,8 @@ class Room : public ::google::protobuf::Message {
   inline void clear_has_enter_password();
   inline void set_has_options();
   inline void clear_has_options();
+  inline void set_has_clan_id();
+  inline void clear_has_clan_id();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -5130,6 +5798,7 @@ class Room : public ::google::protobuf::Message {
   ::google::protobuf::int64 room_id_;
   ::std::string* enter_password_;
   ::Adoter::Asset::RoomOptions* options_;
+  ::google::protobuf::int64 clan_id_;
   int room_type_;
   friend void  protobuf_AddDesc_P_5fProtocol_2eproto();
   friend void protobuf_AssignDesc_P_5fProtocol_2eproto();
@@ -5608,6 +6277,7 @@ class RandomSaizi : public ::google::protobuf::Message {
   typedef RandomSaizi_REASON_TYPE REASON_TYPE;
   static const REASON_TYPE REASON_TYPE_START = RandomSaizi_REASON_TYPE_REASON_TYPE_START;
   static const REASON_TYPE REASON_TYPE_TINGPAI = RandomSaizi_REASON_TYPE_REASON_TYPE_TINGPAI;
+  static const REASON_TYPE REASON_TYPE_HUIPAI = RandomSaizi_REASON_TYPE_REASON_TYPE_HUIPAI;
   static inline bool REASON_TYPE_IsValid(int value) {
     return RandomSaizi_REASON_TYPE_IsValid(value);
   }
@@ -7577,6 +8247,210 @@ class MatchStats : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static MatchStats* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class ClanOperation : public ::google::protobuf::Message {
+ public:
+  ClanOperation();
+  virtual ~ClanOperation();
+
+  ClanOperation(const ClanOperation& from);
+
+  inline ClanOperation& operator=(const ClanOperation& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ClanOperation& default_instance();
+
+  void Swap(ClanOperation* other);
+
+  // implements Message ----------------------------------------------
+
+  ClanOperation* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const ClanOperation& from);
+  void MergeFrom(const ClanOperation& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .Adoter.Asset.META_TYPE type_t = 1 [default = META_TYPE_SHARE_CLAN_OPERATION];
+  inline bool has_type_t() const;
+  inline void clear_type_t();
+  static const int kTypeTFieldNumber = 1;
+  inline ::Adoter::Asset::META_TYPE type_t() const;
+  inline void set_type_t(::Adoter::Asset::META_TYPE value);
+
+  // optional .Adoter.Asset.CLAN_OPER_TYPE oper_type = 2;
+  inline bool has_oper_type() const;
+  inline void clear_oper_type();
+  static const int kOperTypeFieldNumber = 2;
+  inline ::Adoter::Asset::CLAN_OPER_TYPE oper_type() const;
+  inline void set_oper_type(::Adoter::Asset::CLAN_OPER_TYPE value);
+
+  // optional int64 clan_id = 3;
+  inline bool has_clan_id() const;
+  inline void clear_clan_id();
+  static const int kClanIdFieldNumber = 3;
+  inline ::google::protobuf::int64 clan_id() const;
+  inline void set_clan_id(::google::protobuf::int64 value);
+
+  // optional int32 oper_result = 4;
+  inline bool has_oper_result() const;
+  inline void clear_oper_result();
+  static const int kOperResultFieldNumber = 4;
+  inline ::google::protobuf::int32 oper_result() const;
+  inline void set_oper_result(::google::protobuf::int32 value);
+
+  // optional bytes name = 5;
+  inline bool has_name() const;
+  inline void clear_name();
+  static const int kNameFieldNumber = 5;
+  inline const ::std::string& name() const;
+  inline void set_name(const ::std::string& value);
+  inline void set_name(const char* value);
+  inline void set_name(const void* value, size_t size);
+  inline ::std::string* mutable_name();
+  inline ::std::string* release_name();
+  inline void set_allocated_name(::std::string* name);
+
+  // optional bytes announcement = 6;
+  inline bool has_announcement() const;
+  inline void clear_announcement();
+  static const int kAnnouncementFieldNumber = 6;
+  inline const ::std::string& announcement() const;
+  inline void set_announcement(const ::std::string& value);
+  inline void set_announcement(const char* value);
+  inline void set_announcement(const void* value, size_t size);
+  inline ::std::string* mutable_announcement();
+  inline ::std::string* release_announcement();
+  inline void set_allocated_announcement(::std::string* announcement);
+
+  // optional int64 dest_player_id = 7;
+  inline bool has_dest_player_id() const;
+  inline void clear_dest_player_id();
+  static const int kDestPlayerIdFieldNumber = 7;
+  inline ::google::protobuf::int64 dest_player_id() const;
+  inline void set_dest_player_id(::google::protobuf::int64 value);
+
+  // optional int32 recharge_count = 8;
+  inline bool has_recharge_count() const;
+  inline void clear_recharge_count();
+  static const int kRechargeCountFieldNumber = 8;
+  inline ::google::protobuf::int32 recharge_count() const;
+  inline void set_recharge_count(::google::protobuf::int32 value);
+
+  // optional .Adoter.Asset.Clan clan = 9;
+  inline bool has_clan() const;
+  inline void clear_clan();
+  static const int kClanFieldNumber = 9;
+  inline const ::Adoter::Asset::Clan& clan() const;
+  inline ::Adoter::Asset::Clan* mutable_clan();
+  inline ::Adoter::Asset::Clan* release_clan();
+  inline void set_allocated_clan(::Adoter::Asset::Clan* clan);
+
+  // optional int32 room_query_start_index = 10;
+  inline bool has_room_query_start_index() const;
+  inline void clear_room_query_start_index();
+  static const int kRoomQueryStartIndexFieldNumber = 10;
+  inline ::google::protobuf::int32 room_query_start_index() const;
+  inline void set_room_query_start_index(::google::protobuf::int32 value);
+
+  // optional int32 room_query_end_index = 11;
+  inline bool has_room_query_end_index() const;
+  inline void clear_room_query_end_index();
+  static const int kRoomQueryEndIndexFieldNumber = 11;
+  inline ::google::protobuf::int32 room_query_end_index() const;
+  inline void set_room_query_end_index(::google::protobuf::int32 value);
+
+  // repeated .Adoter.Asset.RoomQueryResult room_list = 12;
+  inline int room_list_size() const;
+  inline void clear_room_list();
+  static const int kRoomListFieldNumber = 12;
+  inline const ::Adoter::Asset::RoomQueryResult& room_list(int index) const;
+  inline ::Adoter::Asset::RoomQueryResult* mutable_room_list(int index);
+  inline ::Adoter::Asset::RoomQueryResult* add_room_list();
+  inline const ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::RoomQueryResult >&
+      room_list() const;
+  inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::RoomQueryResult >*
+      mutable_room_list();
+
+  // @@protoc_insertion_point(class_scope:Adoter.Asset.ClanOperation)
+ private:
+  inline void set_has_type_t();
+  inline void clear_has_type_t();
+  inline void set_has_oper_type();
+  inline void clear_has_oper_type();
+  inline void set_has_clan_id();
+  inline void clear_has_clan_id();
+  inline void set_has_oper_result();
+  inline void clear_has_oper_result();
+  inline void set_has_name();
+  inline void clear_has_name();
+  inline void set_has_announcement();
+  inline void clear_has_announcement();
+  inline void set_has_dest_player_id();
+  inline void clear_has_dest_player_id();
+  inline void set_has_recharge_count();
+  inline void clear_has_recharge_count();
+  inline void set_has_clan();
+  inline void clear_has_clan();
+  inline void set_has_room_query_start_index();
+  inline void clear_has_room_query_start_index();
+  inline void set_has_room_query_end_index();
+  inline void clear_has_room_query_end_index();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  int type_t_;
+  int oper_type_;
+  ::google::protobuf::int64 clan_id_;
+  ::std::string* name_;
+  ::std::string* announcement_;
+  ::google::protobuf::int32 oper_result_;
+  ::google::protobuf::int32 recharge_count_;
+  ::google::protobuf::int64 dest_player_id_;
+  ::Adoter::Asset::Clan* clan_;
+  ::google::protobuf::int32 room_query_start_index_;
+  ::google::protobuf::int32 room_query_end_index_;
+  ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::RoomQueryResult > room_list_;
+  friend void  protobuf_AddDesc_P_5fProtocol_2eproto();
+  friend void protobuf_AssignDesc_P_5fProtocol_2eproto();
+  friend void protobuf_ShutdownFile_P_5fProtocol_2eproto();
+
+  void InitAsDefaultInstance();
+  static ClanOperation* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -11491,6 +12365,15 @@ class RoomAll : public ::google::protobuf::Message {
   inline ::Adoter::Asset::PaiElement* release_zhuapai();
   inline void set_allocated_zhuapai(::Adoter::Asset::PaiElement* zhuapai);
 
+  // optional .Adoter.Asset.PaiElement huipai = 12;
+  inline bool has_huipai() const;
+  inline void clear_huipai();
+  static const int kHuipaiFieldNumber = 12;
+  inline const ::Adoter::Asset::PaiElement& huipai() const;
+  inline ::Adoter::Asset::PaiElement* mutable_huipai();
+  inline ::Adoter::Asset::PaiElement* release_huipai();
+  inline void set_allocated_huipai(::Adoter::Asset::PaiElement* huipai);
+
   // @@protoc_insertion_point(class_scope:Adoter.Asset.RoomAll)
  private:
   inline void set_has_type_t();
@@ -11507,6 +12390,8 @@ class RoomAll : public ::google::protobuf::Message {
   inline void clear_has_curr_operator_position();
   inline void set_has_zhuapai();
   inline void clear_has_zhuapai();
+  inline void set_has_huipai();
+  inline void clear_has_huipai();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -11522,6 +12407,7 @@ class RoomAll : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::RoomAll_Player > player_list_;
   ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::GameRecord > list_;
   ::Adoter::Asset::PaiElement* zhuapai_;
+  ::Adoter::Asset::PaiElement* huipai_;
   int curr_operator_position_;
   friend void  protobuf_AddDesc_P_5fProtocol_2eproto();
   friend void protobuf_AssignDesc_P_5fProtocol_2eproto();
@@ -11713,6 +12599,13 @@ class RoomQueryResult : public ::google::protobuf::Message {
   inline ::Adoter::Asset::RoomInformation* release_information();
   inline void set_allocated_information(::Adoter::Asset::RoomInformation* information);
 
+  // optional int64 clan_id = 6;
+  inline bool has_clan_id() const;
+  inline void clear_clan_id();
+  static const int kClanIdFieldNumber = 6;
+  inline ::google::protobuf::int64 clan_id() const;
+  inline void set_clan_id(::google::protobuf::int64 value);
+
   // @@protoc_insertion_point(class_scope:Adoter.Asset.RoomQueryResult)
  private:
   inline void set_has_type_t();
@@ -11725,6 +12618,8 @@ class RoomQueryResult : public ::google::protobuf::Message {
   inline void clear_has_options();
   inline void set_has_information();
   inline void clear_has_information();
+  inline void set_has_clan_id();
+  inline void clear_has_clan_id();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -11735,6 +12630,7 @@ class RoomQueryResult : public ::google::protobuf::Message {
   ::google::protobuf::int32 create_time_;
   ::Adoter::Asset::RoomOptions* options_;
   ::Adoter::Asset::RoomInformation* information_;
+  ::google::protobuf::int64 clan_id_;
   friend void  protobuf_AddDesc_P_5fProtocol_2eproto();
   friend void protobuf_AssignDesc_P_5fProtocol_2eproto();
   friend void protobuf_ShutdownFile_P_5fProtocol_2eproto();
@@ -12122,6 +13018,201 @@ class PlayerState : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static PlayerState* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class ClanRoomStatusChanged : public ::google::protobuf::Message {
+ public:
+  ClanRoomStatusChanged();
+  virtual ~ClanRoomStatusChanged();
+
+  ClanRoomStatusChanged(const ClanRoomStatusChanged& from);
+
+  inline ClanRoomStatusChanged& operator=(const ClanRoomStatusChanged& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ClanRoomStatusChanged& default_instance();
+
+  void Swap(ClanRoomStatusChanged* other);
+
+  // implements Message ----------------------------------------------
+
+  ClanRoomStatusChanged* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const ClanRoomStatusChanged& from);
+  void MergeFrom(const ClanRoomStatusChanged& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .Adoter.Asset.META_TYPE type_t = 1 [default = META_TYPE_S2S_CLAN_ROOM_START_OR_OVER];
+  inline bool has_type_t() const;
+  inline void clear_type_t();
+  static const int kTypeTFieldNumber = 1;
+  inline ::Adoter::Asset::META_TYPE type_t() const;
+  inline void set_type_t(::Adoter::Asset::META_TYPE value);
+
+  // optional .Adoter.Asset.CLAN_ROOM_STATUS_TYPE status = 2;
+  inline bool has_status() const;
+  inline void clear_status();
+  static const int kStatusFieldNumber = 2;
+  inline ::Adoter::Asset::CLAN_ROOM_STATUS_TYPE status() const;
+  inline void set_status(::Adoter::Asset::CLAN_ROOM_STATUS_TYPE value);
+
+  // optional .Adoter.Asset.Room room = 3;
+  inline bool has_room() const;
+  inline void clear_room();
+  static const int kRoomFieldNumber = 3;
+  inline const ::Adoter::Asset::Room& room() const;
+  inline ::Adoter::Asset::Room* mutable_room();
+  inline ::Adoter::Asset::Room* release_room();
+  inline void set_allocated_room(::Adoter::Asset::Room* room);
+
+  // @@protoc_insertion_point(class_scope:Adoter.Asset.ClanRoomStatusChanged)
+ private:
+  inline void set_has_type_t();
+  inline void clear_has_type_t();
+  inline void set_has_status();
+  inline void clear_has_status();
+  inline void set_has_room();
+  inline void clear_has_room();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  int type_t_;
+  int status_;
+  ::Adoter::Asset::Room* room_;
+  friend void  protobuf_AddDesc_P_5fProtocol_2eproto();
+  friend void protobuf_AssignDesc_P_5fProtocol_2eproto();
+  friend void protobuf_ShutdownFile_P_5fProtocol_2eproto();
+
+  void InitAsDefaultInstance();
+  static ClanRoomStatusChanged* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class ClanRoomSync : public ::google::protobuf::Message {
+ public:
+  ClanRoomSync();
+  virtual ~ClanRoomSync();
+
+  ClanRoomSync(const ClanRoomSync& from);
+
+  inline ClanRoomSync& operator=(const ClanRoomSync& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ClanRoomSync& default_instance();
+
+  void Swap(ClanRoomSync* other);
+
+  // implements Message ----------------------------------------------
+
+  ClanRoomSync* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const ClanRoomSync& from);
+  void MergeFrom(const ClanRoomSync& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .Adoter.Asset.META_TYPE type_t = 1 [default = META_TYPE_S2S_CLAN_ROOM_SYNC];
+  inline bool has_type_t() const;
+  inline void clear_type_t();
+  static const int kTypeTFieldNumber = 1;
+  inline ::Adoter::Asset::META_TYPE type_t() const;
+  inline void set_type_t(::Adoter::Asset::META_TYPE value);
+
+  // optional bytes room_status = 2;
+  inline bool has_room_status() const;
+  inline void clear_room_status();
+  static const int kRoomStatusFieldNumber = 2;
+  inline const ::std::string& room_status() const;
+  inline void set_room_status(const ::std::string& value);
+  inline void set_room_status(const char* value);
+  inline void set_room_status(const void* value, size_t size);
+  inline ::std::string* mutable_room_status();
+  inline ::std::string* release_room_status();
+  inline void set_allocated_room_status(::std::string* room_status);
+
+  // @@protoc_insertion_point(class_scope:Adoter.Asset.ClanRoomSync)
+ private:
+  inline void set_has_type_t();
+  inline void clear_has_type_t();
+  inline void set_has_room_status();
+  inline void clear_has_room_status();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint32 _has_bits_[1];
+  mutable int _cached_size_;
+  ::std::string* room_status_;
+  int type_t_;
+  friend void  protobuf_AddDesc_P_5fProtocol_2eproto();
+  friend void protobuf_AssignDesc_P_5fProtocol_2eproto();
+  friend void protobuf_ShutdownFile_P_5fProtocol_2eproto();
+
+  void InitAsDefaultInstance();
+  static ClanRoomSync* default_instance_;
 };
 // ===================================================================
 
@@ -12698,6 +13789,82 @@ inline void User::set_created_time(::google::protobuf::int32 value) {
   set_has_created_time();
   created_time_ = value;
   // @@protoc_insertion_point(field_set:Adoter.Asset.User.created_time)
+}
+
+// optional bytes daili_acount = 6;
+inline bool User::has_daili_acount() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void User::set_has_daili_acount() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void User::clear_has_daili_acount() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void User::clear_daili_acount() {
+  if (daili_acount_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    daili_acount_->clear();
+  }
+  clear_has_daili_acount();
+}
+inline const ::std::string& User::daili_acount() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.User.daili_acount)
+  return *daili_acount_;
+}
+inline void User::set_daili_acount(const ::std::string& value) {
+  set_has_daili_acount();
+  if (daili_acount_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    daili_acount_ = new ::std::string;
+  }
+  daili_acount_->assign(value);
+  // @@protoc_insertion_point(field_set:Adoter.Asset.User.daili_acount)
+}
+inline void User::set_daili_acount(const char* value) {
+  set_has_daili_acount();
+  if (daili_acount_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    daili_acount_ = new ::std::string;
+  }
+  daili_acount_->assign(value);
+  // @@protoc_insertion_point(field_set_char:Adoter.Asset.User.daili_acount)
+}
+inline void User::set_daili_acount(const void* value, size_t size) {
+  set_has_daili_acount();
+  if (daili_acount_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    daili_acount_ = new ::std::string;
+  }
+  daili_acount_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:Adoter.Asset.User.daili_acount)
+}
+inline ::std::string* User::mutable_daili_acount() {
+  set_has_daili_acount();
+  if (daili_acount_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    daili_acount_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.User.daili_acount)
+  return daili_acount_;
+}
+inline ::std::string* User::release_daili_acount() {
+  clear_has_daili_acount();
+  if (daili_acount_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = daili_acount_;
+    daili_acount_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void User::set_allocated_daili_acount(::std::string* daili_acount) {
+  if (daili_acount_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete daili_acount_;
+  }
+  if (daili_acount) {
+    set_has_daili_acount();
+    daili_acount_ = daili_acount;
+  } else {
+    clear_has_daili_acount();
+    daili_acount_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.User.daili_acount)
 }
 
 // -------------------------------------------------------------------
@@ -15451,6 +16618,66 @@ inline void Player::set_matching_room_type(::Adoter::Asset::ROOM_TYPE value) {
   // @@protoc_insertion_point(field_set:Adoter.Asset.Player.matching_room_type)
 }
 
+// repeated int64 clan_hosters = 17;
+inline int Player::clan_hosters_size() const {
+  return clan_hosters_.size();
+}
+inline void Player::clear_clan_hosters() {
+  clan_hosters_.Clear();
+}
+inline ::google::protobuf::int64 Player::clan_hosters(int index) const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Player.clan_hosters)
+  return clan_hosters_.Get(index);
+}
+inline void Player::set_clan_hosters(int index, ::google::protobuf::int64 value) {
+  clan_hosters_.Set(index, value);
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Player.clan_hosters)
+}
+inline void Player::add_clan_hosters(::google::protobuf::int64 value) {
+  clan_hosters_.Add(value);
+  // @@protoc_insertion_point(field_add:Adoter.Asset.Player.clan_hosters)
+}
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::int64 >&
+Player::clan_hosters() const {
+  // @@protoc_insertion_point(field_list:Adoter.Asset.Player.clan_hosters)
+  return clan_hosters_;
+}
+inline ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
+Player::mutable_clan_hosters() {
+  // @@protoc_insertion_point(field_mutable_list:Adoter.Asset.Player.clan_hosters)
+  return &clan_hosters_;
+}
+
+// repeated int64 clan_joiners = 18;
+inline int Player::clan_joiners_size() const {
+  return clan_joiners_.size();
+}
+inline void Player::clear_clan_joiners() {
+  clan_joiners_.Clear();
+}
+inline ::google::protobuf::int64 Player::clan_joiners(int index) const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Player.clan_joiners)
+  return clan_joiners_.Get(index);
+}
+inline void Player::set_clan_joiners(int index, ::google::protobuf::int64 value) {
+  clan_joiners_.Set(index, value);
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Player.clan_joiners)
+}
+inline void Player::add_clan_joiners(::google::protobuf::int64 value) {
+  clan_joiners_.Add(value);
+  // @@protoc_insertion_point(field_add:Adoter.Asset.Player.clan_joiners)
+}
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::int64 >&
+Player::clan_joiners() const {
+  // @@protoc_insertion_point(field_list:Adoter.Asset.Player.clan_joiners)
+  return clan_joiners_;
+}
+inline ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
+Player::mutable_clan_joiners() {
+  // @@protoc_insertion_point(field_mutable_list:Adoter.Asset.Player.clan_joiners)
+  return &clan_joiners_;
+}
+
 // -------------------------------------------------------------------
 
 // Inventory_Element
@@ -15542,6 +16769,812 @@ inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::Inventory_Element 
 Inventory::mutable_inventory() {
   // @@protoc_insertion_point(field_mutable_list:Adoter.Asset.Inventory.inventory)
   return &inventory_;
+}
+
+// -------------------------------------------------------------------
+
+// SystemMessage
+
+// optional int64 player_id = 1;
+inline bool SystemMessage::has_player_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void SystemMessage::set_has_player_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void SystemMessage::clear_has_player_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void SystemMessage::clear_player_id() {
+  player_id_ = GOOGLE_LONGLONG(0);
+  clear_has_player_id();
+}
+inline ::google::protobuf::int64 SystemMessage::player_id() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.SystemMessage.player_id)
+  return player_id_;
+}
+inline void SystemMessage::set_player_id(::google::protobuf::int64 value) {
+  set_has_player_id();
+  player_id_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.SystemMessage.player_id)
+}
+
+// optional bytes name = 2;
+inline bool SystemMessage::has_name() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void SystemMessage::set_has_name() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void SystemMessage::clear_has_name() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void SystemMessage::clear_name() {
+  if (name_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_->clear();
+  }
+  clear_has_name();
+}
+inline const ::std::string& SystemMessage::name() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.SystemMessage.name)
+  return *name_;
+}
+inline void SystemMessage::set_name(const ::std::string& value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+  // @@protoc_insertion_point(field_set:Adoter.Asset.SystemMessage.name)
+}
+inline void SystemMessage::set_name(const char* value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+  // @@protoc_insertion_point(field_set_char:Adoter.Asset.SystemMessage.name)
+}
+inline void SystemMessage::set_name(const void* value, size_t size) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  name_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:Adoter.Asset.SystemMessage.name)
+}
+inline ::std::string* SystemMessage::mutable_name() {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.SystemMessage.name)
+  return name_;
+}
+inline ::std::string* SystemMessage::release_name() {
+  clear_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = name_;
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void SystemMessage::set_allocated_name(::std::string* name) {
+  if (name_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete name_;
+  }
+  if (name) {
+    set_has_name();
+    name_ = name;
+  } else {
+    clear_has_name();
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.SystemMessage.name)
+}
+
+// optional int32 oper_time = 3;
+inline bool SystemMessage::has_oper_time() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void SystemMessage::set_has_oper_time() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void SystemMessage::clear_has_oper_time() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void SystemMessage::clear_oper_time() {
+  oper_time_ = 0;
+  clear_has_oper_time();
+}
+inline ::google::protobuf::int32 SystemMessage::oper_time() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.SystemMessage.oper_time)
+  return oper_time_;
+}
+inline void SystemMessage::set_oper_time(::google::protobuf::int32 value) {
+  set_has_oper_time();
+  oper_time_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.SystemMessage.oper_time)
+}
+
+// optional .Adoter.Asset.CLAN_OPER_TYPE oper_type = 4;
+inline bool SystemMessage::has_oper_type() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void SystemMessage::set_has_oper_type() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void SystemMessage::clear_has_oper_type() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void SystemMessage::clear_oper_type() {
+  oper_type_ = 1;
+  clear_has_oper_type();
+}
+inline ::Adoter::Asset::CLAN_OPER_TYPE SystemMessage::oper_type() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.SystemMessage.oper_type)
+  return static_cast< ::Adoter::Asset::CLAN_OPER_TYPE >(oper_type_);
+}
+inline void SystemMessage::set_oper_type(::Adoter::Asset::CLAN_OPER_TYPE value) {
+  assert(::Adoter::Asset::CLAN_OPER_TYPE_IsValid(value));
+  set_has_oper_type();
+  oper_type_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.SystemMessage.oper_type)
+}
+
+// -------------------------------------------------------------------
+
+// Clan_Member
+
+// optional int64 player_id = 1;
+inline bool Clan_Member::has_player_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Clan_Member::set_has_player_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Clan_Member::clear_has_player_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Clan_Member::clear_player_id() {
+  player_id_ = GOOGLE_LONGLONG(0);
+  clear_has_player_id();
+}
+inline ::google::protobuf::int64 Clan_Member::player_id() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.Member.player_id)
+  return player_id_;
+}
+inline void Clan_Member::set_player_id(::google::protobuf::int64 value) {
+  set_has_player_id();
+  player_id_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Clan.Member.player_id)
+}
+
+// optional bytes name = 2;
+inline bool Clan_Member::has_name() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void Clan_Member::set_has_name() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void Clan_Member::clear_has_name() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void Clan_Member::clear_name() {
+  if (name_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_->clear();
+  }
+  clear_has_name();
+}
+inline const ::std::string& Clan_Member::name() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.Member.name)
+  return *name_;
+}
+inline void Clan_Member::set_name(const ::std::string& value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Clan.Member.name)
+}
+inline void Clan_Member::set_name(const char* value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+  // @@protoc_insertion_point(field_set_char:Adoter.Asset.Clan.Member.name)
+}
+inline void Clan_Member::set_name(const void* value, size_t size) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  name_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:Adoter.Asset.Clan.Member.name)
+}
+inline ::std::string* Clan_Member::mutable_name() {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.Clan.Member.name)
+  return name_;
+}
+inline ::std::string* Clan_Member::release_name() {
+  clear_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = name_;
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void Clan_Member::set_allocated_name(::std::string* name) {
+  if (name_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete name_;
+  }
+  if (name) {
+    set_has_name();
+    name_ = name;
+  } else {
+    clear_has_name();
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.Clan.Member.name)
+}
+
+// optional .Adoter.Asset.CLAN_MEM_STATUS_TYPE status = 3;
+inline bool Clan_Member::has_status() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void Clan_Member::set_has_status() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void Clan_Member::clear_has_status() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void Clan_Member::clear_status() {
+  status_ = 1;
+  clear_has_status();
+}
+inline ::Adoter::Asset::CLAN_MEM_STATUS_TYPE Clan_Member::status() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.Member.status)
+  return static_cast< ::Adoter::Asset::CLAN_MEM_STATUS_TYPE >(status_);
+}
+inline void Clan_Member::set_status(::Adoter::Asset::CLAN_MEM_STATUS_TYPE value) {
+  assert(::Adoter::Asset::CLAN_MEM_STATUS_TYPE_IsValid(value));
+  set_has_status();
+  status_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Clan.Member.status)
+}
+
+// -------------------------------------------------------------------
+
+// Clan_RoomHistory
+
+// optional int64 room_id = 1;
+inline bool Clan_RoomHistory::has_room_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Clan_RoomHistory::set_has_room_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Clan_RoomHistory::clear_has_room_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Clan_RoomHistory::clear_room_id() {
+  room_id_ = GOOGLE_LONGLONG(0);
+  clear_has_room_id();
+}
+inline ::google::protobuf::int64 Clan_RoomHistory::room_id() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.RoomHistory.room_id)
+  return room_id_;
+}
+inline void Clan_RoomHistory::set_room_id(::google::protobuf::int64 value) {
+  set_has_room_id();
+  room_id_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Clan.RoomHistory.room_id)
+}
+
+// optional int32 battle_time = 2;
+inline bool Clan_RoomHistory::has_battle_time() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void Clan_RoomHistory::set_has_battle_time() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void Clan_RoomHistory::clear_has_battle_time() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void Clan_RoomHistory::clear_battle_time() {
+  battle_time_ = 0;
+  clear_has_battle_time();
+}
+inline ::google::protobuf::int32 Clan_RoomHistory::battle_time() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.RoomHistory.battle_time)
+  return battle_time_;
+}
+inline void Clan_RoomHistory::set_battle_time(::google::protobuf::int32 value) {
+  set_has_battle_time();
+  battle_time_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Clan.RoomHistory.battle_time)
+}
+
+// -------------------------------------------------------------------
+
+// Clan
+
+// optional int64 clan_id = 1;
+inline bool Clan::has_clan_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void Clan::set_has_clan_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void Clan::clear_has_clan_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void Clan::clear_clan_id() {
+  clan_id_ = GOOGLE_LONGLONG(0);
+  clear_has_clan_id();
+}
+inline ::google::protobuf::int64 Clan::clan_id() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.clan_id)
+  return clan_id_;
+}
+inline void Clan::set_clan_id(::google::protobuf::int64 value) {
+  set_has_clan_id();
+  clan_id_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Clan.clan_id)
+}
+
+// optional bytes name = 2;
+inline bool Clan::has_name() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void Clan::set_has_name() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void Clan::clear_has_name() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void Clan::clear_name() {
+  if (name_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_->clear();
+  }
+  clear_has_name();
+}
+inline const ::std::string& Clan::name() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.name)
+  return *name_;
+}
+inline void Clan::set_name(const ::std::string& value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Clan.name)
+}
+inline void Clan::set_name(const char* value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+  // @@protoc_insertion_point(field_set_char:Adoter.Asset.Clan.name)
+}
+inline void Clan::set_name(const void* value, size_t size) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  name_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:Adoter.Asset.Clan.name)
+}
+inline ::std::string* Clan::mutable_name() {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.Clan.name)
+  return name_;
+}
+inline ::std::string* Clan::release_name() {
+  clear_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = name_;
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void Clan::set_allocated_name(::std::string* name) {
+  if (name_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete name_;
+  }
+  if (name) {
+    set_has_name();
+    name_ = name;
+  } else {
+    clear_has_name();
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.Clan.name)
+}
+
+// optional int32 created_time = 3;
+inline bool Clan::has_created_time() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void Clan::set_has_created_time() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void Clan::clear_has_created_time() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void Clan::clear_created_time() {
+  created_time_ = 0;
+  clear_has_created_time();
+}
+inline ::google::protobuf::int32 Clan::created_time() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.created_time)
+  return created_time_;
+}
+inline void Clan::set_created_time(::google::protobuf::int32 value) {
+  set_has_created_time();
+  created_time_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Clan.created_time)
+}
+
+// optional int64 hoster_id = 4;
+inline bool Clan::has_hoster_id() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void Clan::set_has_hoster_id() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void Clan::clear_has_hoster_id() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void Clan::clear_hoster_id() {
+  hoster_id_ = GOOGLE_LONGLONG(0);
+  clear_has_hoster_id();
+}
+inline ::google::protobuf::int64 Clan::hoster_id() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.hoster_id)
+  return hoster_id_;
+}
+inline void Clan::set_hoster_id(::google::protobuf::int64 value) {
+  set_has_hoster_id();
+  hoster_id_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Clan.hoster_id)
+}
+
+// optional bytes hoster_name = 5;
+inline bool Clan::has_hoster_name() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void Clan::set_has_hoster_name() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void Clan::clear_has_hoster_name() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void Clan::clear_hoster_name() {
+  if (hoster_name_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    hoster_name_->clear();
+  }
+  clear_has_hoster_name();
+}
+inline const ::std::string& Clan::hoster_name() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.hoster_name)
+  return *hoster_name_;
+}
+inline void Clan::set_hoster_name(const ::std::string& value) {
+  set_has_hoster_name();
+  if (hoster_name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    hoster_name_ = new ::std::string;
+  }
+  hoster_name_->assign(value);
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Clan.hoster_name)
+}
+inline void Clan::set_hoster_name(const char* value) {
+  set_has_hoster_name();
+  if (hoster_name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    hoster_name_ = new ::std::string;
+  }
+  hoster_name_->assign(value);
+  // @@protoc_insertion_point(field_set_char:Adoter.Asset.Clan.hoster_name)
+}
+inline void Clan::set_hoster_name(const void* value, size_t size) {
+  set_has_hoster_name();
+  if (hoster_name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    hoster_name_ = new ::std::string;
+  }
+  hoster_name_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:Adoter.Asset.Clan.hoster_name)
+}
+inline ::std::string* Clan::mutable_hoster_name() {
+  set_has_hoster_name();
+  if (hoster_name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    hoster_name_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.Clan.hoster_name)
+  return hoster_name_;
+}
+inline ::std::string* Clan::release_hoster_name() {
+  clear_has_hoster_name();
+  if (hoster_name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = hoster_name_;
+    hoster_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void Clan::set_allocated_hoster_name(::std::string* hoster_name) {
+  if (hoster_name_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete hoster_name_;
+  }
+  if (hoster_name) {
+    set_has_hoster_name();
+    hoster_name_ = hoster_name;
+  } else {
+    clear_has_hoster_name();
+    hoster_name_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.Clan.hoster_name)
+}
+
+// optional int64 room_card_count = 6;
+inline bool Clan::has_room_card_count() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void Clan::set_has_room_card_count() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void Clan::clear_has_room_card_count() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void Clan::clear_room_card_count() {
+  room_card_count_ = GOOGLE_LONGLONG(0);
+  clear_has_room_card_count();
+}
+inline ::google::protobuf::int64 Clan::room_card_count() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.room_card_count)
+  return room_card_count_;
+}
+inline void Clan::set_room_card_count(::google::protobuf::int64 value) {
+  set_has_room_card_count();
+  room_card_count_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Clan.room_card_count)
+}
+
+// optional bytes announcement = 7;
+inline bool Clan::has_announcement() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void Clan::set_has_announcement() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void Clan::clear_has_announcement() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void Clan::clear_announcement() {
+  if (announcement_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    announcement_->clear();
+  }
+  clear_has_announcement();
+}
+inline const ::std::string& Clan::announcement() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.announcement)
+  return *announcement_;
+}
+inline void Clan::set_announcement(const ::std::string& value) {
+  set_has_announcement();
+  if (announcement_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    announcement_ = new ::std::string;
+  }
+  announcement_->assign(value);
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Clan.announcement)
+}
+inline void Clan::set_announcement(const char* value) {
+  set_has_announcement();
+  if (announcement_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    announcement_ = new ::std::string;
+  }
+  announcement_->assign(value);
+  // @@protoc_insertion_point(field_set_char:Adoter.Asset.Clan.announcement)
+}
+inline void Clan::set_announcement(const void* value, size_t size) {
+  set_has_announcement();
+  if (announcement_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    announcement_ = new ::std::string;
+  }
+  announcement_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:Adoter.Asset.Clan.announcement)
+}
+inline ::std::string* Clan::mutable_announcement() {
+  set_has_announcement();
+  if (announcement_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    announcement_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.Clan.announcement)
+  return announcement_;
+}
+inline ::std::string* Clan::release_announcement() {
+  clear_has_announcement();
+  if (announcement_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = announcement_;
+    announcement_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void Clan::set_allocated_announcement(::std::string* announcement) {
+  if (announcement_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete announcement_;
+  }
+  if (announcement) {
+    set_has_announcement();
+    announcement_ = announcement;
+  } else {
+    clear_has_announcement();
+    announcement_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.Clan.announcement)
+}
+
+// repeated .Adoter.Asset.Clan.Member member_list = 8;
+inline int Clan::member_list_size() const {
+  return member_list_.size();
+}
+inline void Clan::clear_member_list() {
+  member_list_.Clear();
+}
+inline const ::Adoter::Asset::Clan_Member& Clan::member_list(int index) const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.member_list)
+  return member_list_.Get(index);
+}
+inline ::Adoter::Asset::Clan_Member* Clan::mutable_member_list(int index) {
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.Clan.member_list)
+  return member_list_.Mutable(index);
+}
+inline ::Adoter::Asset::Clan_Member* Clan::add_member_list() {
+  // @@protoc_insertion_point(field_add:Adoter.Asset.Clan.member_list)
+  return member_list_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::Clan_Member >&
+Clan::member_list() const {
+  // @@protoc_insertion_point(field_list:Adoter.Asset.Clan.member_list)
+  return member_list_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::Clan_Member >*
+Clan::mutable_member_list() {
+  // @@protoc_insertion_point(field_mutable_list:Adoter.Asset.Clan.member_list)
+  return &member_list_;
+}
+
+// optional bool dismiss = 9;
+inline bool Clan::has_dismiss() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void Clan::set_has_dismiss() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void Clan::clear_has_dismiss() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void Clan::clear_dismiss() {
+  dismiss_ = false;
+  clear_has_dismiss();
+}
+inline bool Clan::dismiss() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.dismiss)
+  return dismiss_;
+}
+inline void Clan::set_dismiss(bool value) {
+  set_has_dismiss();
+  dismiss_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Clan.dismiss)
+}
+
+// repeated .Adoter.Asset.Clan.RoomHistory battle_history = 10;
+inline int Clan::battle_history_size() const {
+  return battle_history_.size();
+}
+inline void Clan::clear_battle_history() {
+  battle_history_.Clear();
+}
+inline const ::Adoter::Asset::Clan_RoomHistory& Clan::battle_history(int index) const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.battle_history)
+  return battle_history_.Get(index);
+}
+inline ::Adoter::Asset::Clan_RoomHistory* Clan::mutable_battle_history(int index) {
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.Clan.battle_history)
+  return battle_history_.Mutable(index);
+}
+inline ::Adoter::Asset::Clan_RoomHistory* Clan::add_battle_history() {
+  // @@protoc_insertion_point(field_add:Adoter.Asset.Clan.battle_history)
+  return battle_history_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::Clan_RoomHistory >&
+Clan::battle_history() const {
+  // @@protoc_insertion_point(field_list:Adoter.Asset.Clan.battle_history)
+  return battle_history_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::Clan_RoomHistory >*
+Clan::mutable_battle_history() {
+  // @@protoc_insertion_point(field_mutable_list:Adoter.Asset.Clan.battle_history)
+  return &battle_history_;
+}
+
+// repeated .Adoter.Asset.SystemMessage message_list = 11;
+inline int Clan::message_list_size() const {
+  return message_list_.size();
+}
+inline void Clan::clear_message_list() {
+  message_list_.Clear();
+}
+inline const ::Adoter::Asset::SystemMessage& Clan::message_list(int index) const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.message_list)
+  return message_list_.Get(index);
+}
+inline ::Adoter::Asset::SystemMessage* Clan::mutable_message_list(int index) {
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.Clan.message_list)
+  return message_list_.Mutable(index);
+}
+inline ::Adoter::Asset::SystemMessage* Clan::add_message_list() {
+  // @@protoc_insertion_point(field_add:Adoter.Asset.Clan.message_list)
+  return message_list_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::SystemMessage >&
+Clan::message_list() const {
+  // @@protoc_insertion_point(field_list:Adoter.Asset.Clan.message_list)
+  return message_list_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::SystemMessage >*
+Clan::mutable_message_list() {
+  // @@protoc_insertion_point(field_mutable_list:Adoter.Asset.Clan.message_list)
+  return &message_list_;
+}
+
+// repeated int64 room_list = 12;
+inline int Clan::room_list_size() const {
+  return room_list_.size();
+}
+inline void Clan::clear_room_list() {
+  room_list_.Clear();
+}
+inline ::google::protobuf::int64 Clan::room_list(int index) const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Clan.room_list)
+  return room_list_.Get(index);
+}
+inline void Clan::set_room_list(int index, ::google::protobuf::int64 value) {
+  room_list_.Set(index, value);
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Clan.room_list)
+}
+inline void Clan::add_room_list(::google::protobuf::int64 value) {
+  room_list_.Add(value);
+  // @@protoc_insertion_point(field_add:Adoter.Asset.Clan.room_list)
+}
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::int64 >&
+Clan::room_list() const {
+  // @@protoc_insertion_point(field_list:Adoter.Asset.Clan.room_list)
+  return room_list_;
+}
+inline ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
+Clan::mutable_room_list() {
+  // @@protoc_insertion_point(field_mutable_list:Adoter.Asset.Clan.room_list)
+  return &room_list_;
 }
 
 // -------------------------------------------------------------------
@@ -17703,6 +19736,30 @@ inline void Room::set_allocated_options(::Adoter::Asset::RoomOptions* options) {
     clear_has_options();
   }
   // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.Room.options)
+}
+
+// optional int64 clan_id = 5;
+inline bool Room::has_clan_id() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void Room::set_has_clan_id() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void Room::clear_has_clan_id() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void Room::clear_clan_id() {
+  clan_id_ = GOOGLE_LONGLONG(0);
+  clear_has_clan_id();
+}
+inline ::google::protobuf::int64 Room::clan_id() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.Room.clan_id)
+  return clan_id_;
+}
+inline void Room::set_clan_id(::google::protobuf::int64 value) {
+  set_has_clan_id();
+  clan_id_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.Room.clan_id)
 }
 
 // -------------------------------------------------------------------
@@ -20049,6 +22106,427 @@ MatchStats::room_list() const {
 inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::MatchStats_MatchingRoom >*
 MatchStats::mutable_room_list() {
   // @@protoc_insertion_point(field_mutable_list:Adoter.Asset.MatchStats.room_list)
+  return &room_list_;
+}
+
+// -------------------------------------------------------------------
+
+// ClanOperation
+
+// optional .Adoter.Asset.META_TYPE type_t = 1 [default = META_TYPE_SHARE_CLAN_OPERATION];
+inline bool ClanOperation::has_type_t() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ClanOperation::set_has_type_t() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ClanOperation::clear_has_type_t() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ClanOperation::clear_type_t() {
+  type_t_ = 21;
+  clear_has_type_t();
+}
+inline ::Adoter::Asset::META_TYPE ClanOperation::type_t() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanOperation.type_t)
+  return static_cast< ::Adoter::Asset::META_TYPE >(type_t_);
+}
+inline void ClanOperation::set_type_t(::Adoter::Asset::META_TYPE value) {
+  assert(::Adoter::Asset::META_TYPE_IsValid(value));
+  set_has_type_t();
+  type_t_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanOperation.type_t)
+}
+
+// optional .Adoter.Asset.CLAN_OPER_TYPE oper_type = 2;
+inline bool ClanOperation::has_oper_type() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ClanOperation::set_has_oper_type() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ClanOperation::clear_has_oper_type() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ClanOperation::clear_oper_type() {
+  oper_type_ = 1;
+  clear_has_oper_type();
+}
+inline ::Adoter::Asset::CLAN_OPER_TYPE ClanOperation::oper_type() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanOperation.oper_type)
+  return static_cast< ::Adoter::Asset::CLAN_OPER_TYPE >(oper_type_);
+}
+inline void ClanOperation::set_oper_type(::Adoter::Asset::CLAN_OPER_TYPE value) {
+  assert(::Adoter::Asset::CLAN_OPER_TYPE_IsValid(value));
+  set_has_oper_type();
+  oper_type_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanOperation.oper_type)
+}
+
+// optional int64 clan_id = 3;
+inline bool ClanOperation::has_clan_id() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void ClanOperation::set_has_clan_id() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void ClanOperation::clear_has_clan_id() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void ClanOperation::clear_clan_id() {
+  clan_id_ = GOOGLE_LONGLONG(0);
+  clear_has_clan_id();
+}
+inline ::google::protobuf::int64 ClanOperation::clan_id() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanOperation.clan_id)
+  return clan_id_;
+}
+inline void ClanOperation::set_clan_id(::google::protobuf::int64 value) {
+  set_has_clan_id();
+  clan_id_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanOperation.clan_id)
+}
+
+// optional int32 oper_result = 4;
+inline bool ClanOperation::has_oper_result() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void ClanOperation::set_has_oper_result() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void ClanOperation::clear_has_oper_result() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void ClanOperation::clear_oper_result() {
+  oper_result_ = 0;
+  clear_has_oper_result();
+}
+inline ::google::protobuf::int32 ClanOperation::oper_result() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanOperation.oper_result)
+  return oper_result_;
+}
+inline void ClanOperation::set_oper_result(::google::protobuf::int32 value) {
+  set_has_oper_result();
+  oper_result_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanOperation.oper_result)
+}
+
+// optional bytes name = 5;
+inline bool ClanOperation::has_name() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void ClanOperation::set_has_name() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void ClanOperation::clear_has_name() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void ClanOperation::clear_name() {
+  if (name_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_->clear();
+  }
+  clear_has_name();
+}
+inline const ::std::string& ClanOperation::name() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanOperation.name)
+  return *name_;
+}
+inline void ClanOperation::set_name(const ::std::string& value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanOperation.name)
+}
+inline void ClanOperation::set_name(const char* value) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  name_->assign(value);
+  // @@protoc_insertion_point(field_set_char:Adoter.Asset.ClanOperation.name)
+}
+inline void ClanOperation::set_name(const void* value, size_t size) {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  name_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:Adoter.Asset.ClanOperation.name)
+}
+inline ::std::string* ClanOperation::mutable_name() {
+  set_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    name_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.ClanOperation.name)
+  return name_;
+}
+inline ::std::string* ClanOperation::release_name() {
+  clear_has_name();
+  if (name_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = name_;
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void ClanOperation::set_allocated_name(::std::string* name) {
+  if (name_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete name_;
+  }
+  if (name) {
+    set_has_name();
+    name_ = name;
+  } else {
+    clear_has_name();
+    name_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.ClanOperation.name)
+}
+
+// optional bytes announcement = 6;
+inline bool ClanOperation::has_announcement() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void ClanOperation::set_has_announcement() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void ClanOperation::clear_has_announcement() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void ClanOperation::clear_announcement() {
+  if (announcement_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    announcement_->clear();
+  }
+  clear_has_announcement();
+}
+inline const ::std::string& ClanOperation::announcement() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanOperation.announcement)
+  return *announcement_;
+}
+inline void ClanOperation::set_announcement(const ::std::string& value) {
+  set_has_announcement();
+  if (announcement_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    announcement_ = new ::std::string;
+  }
+  announcement_->assign(value);
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanOperation.announcement)
+}
+inline void ClanOperation::set_announcement(const char* value) {
+  set_has_announcement();
+  if (announcement_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    announcement_ = new ::std::string;
+  }
+  announcement_->assign(value);
+  // @@protoc_insertion_point(field_set_char:Adoter.Asset.ClanOperation.announcement)
+}
+inline void ClanOperation::set_announcement(const void* value, size_t size) {
+  set_has_announcement();
+  if (announcement_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    announcement_ = new ::std::string;
+  }
+  announcement_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:Adoter.Asset.ClanOperation.announcement)
+}
+inline ::std::string* ClanOperation::mutable_announcement() {
+  set_has_announcement();
+  if (announcement_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    announcement_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.ClanOperation.announcement)
+  return announcement_;
+}
+inline ::std::string* ClanOperation::release_announcement() {
+  clear_has_announcement();
+  if (announcement_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = announcement_;
+    announcement_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void ClanOperation::set_allocated_announcement(::std::string* announcement) {
+  if (announcement_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete announcement_;
+  }
+  if (announcement) {
+    set_has_announcement();
+    announcement_ = announcement;
+  } else {
+    clear_has_announcement();
+    announcement_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.ClanOperation.announcement)
+}
+
+// optional int64 dest_player_id = 7;
+inline bool ClanOperation::has_dest_player_id() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void ClanOperation::set_has_dest_player_id() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void ClanOperation::clear_has_dest_player_id() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void ClanOperation::clear_dest_player_id() {
+  dest_player_id_ = GOOGLE_LONGLONG(0);
+  clear_has_dest_player_id();
+}
+inline ::google::protobuf::int64 ClanOperation::dest_player_id() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanOperation.dest_player_id)
+  return dest_player_id_;
+}
+inline void ClanOperation::set_dest_player_id(::google::protobuf::int64 value) {
+  set_has_dest_player_id();
+  dest_player_id_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanOperation.dest_player_id)
+}
+
+// optional int32 recharge_count = 8;
+inline bool ClanOperation::has_recharge_count() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void ClanOperation::set_has_recharge_count() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void ClanOperation::clear_has_recharge_count() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void ClanOperation::clear_recharge_count() {
+  recharge_count_ = 0;
+  clear_has_recharge_count();
+}
+inline ::google::protobuf::int32 ClanOperation::recharge_count() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanOperation.recharge_count)
+  return recharge_count_;
+}
+inline void ClanOperation::set_recharge_count(::google::protobuf::int32 value) {
+  set_has_recharge_count();
+  recharge_count_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanOperation.recharge_count)
+}
+
+// optional .Adoter.Asset.Clan clan = 9;
+inline bool ClanOperation::has_clan() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void ClanOperation::set_has_clan() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void ClanOperation::clear_has_clan() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void ClanOperation::clear_clan() {
+  if (clan_ != NULL) clan_->::Adoter::Asset::Clan::Clear();
+  clear_has_clan();
+}
+inline const ::Adoter::Asset::Clan& ClanOperation::clan() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanOperation.clan)
+  return clan_ != NULL ? *clan_ : *default_instance_->clan_;
+}
+inline ::Adoter::Asset::Clan* ClanOperation::mutable_clan() {
+  set_has_clan();
+  if (clan_ == NULL) clan_ = new ::Adoter::Asset::Clan;
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.ClanOperation.clan)
+  return clan_;
+}
+inline ::Adoter::Asset::Clan* ClanOperation::release_clan() {
+  clear_has_clan();
+  ::Adoter::Asset::Clan* temp = clan_;
+  clan_ = NULL;
+  return temp;
+}
+inline void ClanOperation::set_allocated_clan(::Adoter::Asset::Clan* clan) {
+  delete clan_;
+  clan_ = clan;
+  if (clan) {
+    set_has_clan();
+  } else {
+    clear_has_clan();
+  }
+  // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.ClanOperation.clan)
+}
+
+// optional int32 room_query_start_index = 10;
+inline bool ClanOperation::has_room_query_start_index() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void ClanOperation::set_has_room_query_start_index() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void ClanOperation::clear_has_room_query_start_index() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+inline void ClanOperation::clear_room_query_start_index() {
+  room_query_start_index_ = 0;
+  clear_has_room_query_start_index();
+}
+inline ::google::protobuf::int32 ClanOperation::room_query_start_index() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanOperation.room_query_start_index)
+  return room_query_start_index_;
+}
+inline void ClanOperation::set_room_query_start_index(::google::protobuf::int32 value) {
+  set_has_room_query_start_index();
+  room_query_start_index_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanOperation.room_query_start_index)
+}
+
+// optional int32 room_query_end_index = 11;
+inline bool ClanOperation::has_room_query_end_index() const {
+  return (_has_bits_[0] & 0x00000400u) != 0;
+}
+inline void ClanOperation::set_has_room_query_end_index() {
+  _has_bits_[0] |= 0x00000400u;
+}
+inline void ClanOperation::clear_has_room_query_end_index() {
+  _has_bits_[0] &= ~0x00000400u;
+}
+inline void ClanOperation::clear_room_query_end_index() {
+  room_query_end_index_ = 0;
+  clear_has_room_query_end_index();
+}
+inline ::google::protobuf::int32 ClanOperation::room_query_end_index() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanOperation.room_query_end_index)
+  return room_query_end_index_;
+}
+inline void ClanOperation::set_room_query_end_index(::google::protobuf::int32 value) {
+  set_has_room_query_end_index();
+  room_query_end_index_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanOperation.room_query_end_index)
+}
+
+// repeated .Adoter.Asset.RoomQueryResult room_list = 12;
+inline int ClanOperation::room_list_size() const {
+  return room_list_.size();
+}
+inline void ClanOperation::clear_room_list() {
+  room_list_.Clear();
+}
+inline const ::Adoter::Asset::RoomQueryResult& ClanOperation::room_list(int index) const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanOperation.room_list)
+  return room_list_.Get(index);
+}
+inline ::Adoter::Asset::RoomQueryResult* ClanOperation::mutable_room_list(int index) {
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.ClanOperation.room_list)
+  return room_list_.Mutable(index);
+}
+inline ::Adoter::Asset::RoomQueryResult* ClanOperation::add_room_list() {
+  // @@protoc_insertion_point(field_add:Adoter.Asset.ClanOperation.room_list)
+  return room_list_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::RoomQueryResult >&
+ClanOperation::room_list() const {
+  // @@protoc_insertion_point(field_list:Adoter.Asset.ClanOperation.room_list)
+  return room_list_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::Adoter::Asset::RoomQueryResult >*
+ClanOperation::mutable_room_list() {
+  // @@protoc_insertion_point(field_mutable_list:Adoter.Asset.ClanOperation.room_list)
   return &room_list_;
 }
 
@@ -23925,6 +26403,47 @@ inline void RoomAll::set_allocated_zhuapai(::Adoter::Asset::PaiElement* zhuapai)
   // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.RoomAll.zhuapai)
 }
 
+// optional .Adoter.Asset.PaiElement huipai = 12;
+inline bool RoomAll::has_huipai() const {
+  return (_has_bits_[0] & 0x00000800u) != 0;
+}
+inline void RoomAll::set_has_huipai() {
+  _has_bits_[0] |= 0x00000800u;
+}
+inline void RoomAll::clear_has_huipai() {
+  _has_bits_[0] &= ~0x00000800u;
+}
+inline void RoomAll::clear_huipai() {
+  if (huipai_ != NULL) huipai_->::Adoter::Asset::PaiElement::Clear();
+  clear_has_huipai();
+}
+inline const ::Adoter::Asset::PaiElement& RoomAll::huipai() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.RoomAll.huipai)
+  return huipai_ != NULL ? *huipai_ : *default_instance_->huipai_;
+}
+inline ::Adoter::Asset::PaiElement* RoomAll::mutable_huipai() {
+  set_has_huipai();
+  if (huipai_ == NULL) huipai_ = new ::Adoter::Asset::PaiElement;
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.RoomAll.huipai)
+  return huipai_;
+}
+inline ::Adoter::Asset::PaiElement* RoomAll::release_huipai() {
+  clear_has_huipai();
+  ::Adoter::Asset::PaiElement* temp = huipai_;
+  huipai_ = NULL;
+  return temp;
+}
+inline void RoomAll::set_allocated_huipai(::Adoter::Asset::PaiElement* huipai) {
+  delete huipai_;
+  huipai_ = huipai;
+  if (huipai) {
+    set_has_huipai();
+  } else {
+    clear_has_huipai();
+  }
+  // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.RoomAll.huipai)
+}
+
 // -------------------------------------------------------------------
 
 // RoomBeenIn
@@ -24135,6 +26654,30 @@ inline void RoomQueryResult::set_allocated_information(::Adoter::Asset::RoomInfo
     clear_has_information();
   }
   // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.RoomQueryResult.information)
+}
+
+// optional int64 clan_id = 6;
+inline bool RoomQueryResult::has_clan_id() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void RoomQueryResult::set_has_clan_id() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void RoomQueryResult::clear_has_clan_id() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void RoomQueryResult::clear_clan_id() {
+  clan_id_ = GOOGLE_LONGLONG(0);
+  clear_has_clan_id();
+}
+inline ::google::protobuf::int64 RoomQueryResult::clan_id() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.RoomQueryResult.clan_id)
+  return clan_id_;
+}
+inline void RoomQueryResult::set_clan_id(::google::protobuf::int64 value) {
+  set_has_clan_id();
+  clan_id_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.RoomQueryResult.clan_id)
 }
 
 // -------------------------------------------------------------------
@@ -24452,6 +26995,206 @@ inline void PlayerState::set_oper_type(::Adoter::Asset::GAME_OPER_TYPE value) {
   // @@protoc_insertion_point(field_set:Adoter.Asset.PlayerState.oper_type)
 }
 
+// -------------------------------------------------------------------
+
+// ClanRoomStatusChanged
+
+// optional .Adoter.Asset.META_TYPE type_t = 1 [default = META_TYPE_S2S_CLAN_ROOM_START_OR_OVER];
+inline bool ClanRoomStatusChanged::has_type_t() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ClanRoomStatusChanged::set_has_type_t() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ClanRoomStatusChanged::clear_has_type_t() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ClanRoomStatusChanged::clear_type_t() {
+  type_t_ = 1005;
+  clear_has_type_t();
+}
+inline ::Adoter::Asset::META_TYPE ClanRoomStatusChanged::type_t() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanRoomStatusChanged.type_t)
+  return static_cast< ::Adoter::Asset::META_TYPE >(type_t_);
+}
+inline void ClanRoomStatusChanged::set_type_t(::Adoter::Asset::META_TYPE value) {
+  assert(::Adoter::Asset::META_TYPE_IsValid(value));
+  set_has_type_t();
+  type_t_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanRoomStatusChanged.type_t)
+}
+
+// optional .Adoter.Asset.CLAN_ROOM_STATUS_TYPE status = 2;
+inline bool ClanRoomStatusChanged::has_status() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ClanRoomStatusChanged::set_has_status() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ClanRoomStatusChanged::clear_has_status() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ClanRoomStatusChanged::clear_status() {
+  status_ = 1;
+  clear_has_status();
+}
+inline ::Adoter::Asset::CLAN_ROOM_STATUS_TYPE ClanRoomStatusChanged::status() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanRoomStatusChanged.status)
+  return static_cast< ::Adoter::Asset::CLAN_ROOM_STATUS_TYPE >(status_);
+}
+inline void ClanRoomStatusChanged::set_status(::Adoter::Asset::CLAN_ROOM_STATUS_TYPE value) {
+  assert(::Adoter::Asset::CLAN_ROOM_STATUS_TYPE_IsValid(value));
+  set_has_status();
+  status_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanRoomStatusChanged.status)
+}
+
+// optional .Adoter.Asset.Room room = 3;
+inline bool ClanRoomStatusChanged::has_room() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void ClanRoomStatusChanged::set_has_room() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void ClanRoomStatusChanged::clear_has_room() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void ClanRoomStatusChanged::clear_room() {
+  if (room_ != NULL) room_->::Adoter::Asset::Room::Clear();
+  clear_has_room();
+}
+inline const ::Adoter::Asset::Room& ClanRoomStatusChanged::room() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanRoomStatusChanged.room)
+  return room_ != NULL ? *room_ : *default_instance_->room_;
+}
+inline ::Adoter::Asset::Room* ClanRoomStatusChanged::mutable_room() {
+  set_has_room();
+  if (room_ == NULL) room_ = new ::Adoter::Asset::Room;
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.ClanRoomStatusChanged.room)
+  return room_;
+}
+inline ::Adoter::Asset::Room* ClanRoomStatusChanged::release_room() {
+  clear_has_room();
+  ::Adoter::Asset::Room* temp = room_;
+  room_ = NULL;
+  return temp;
+}
+inline void ClanRoomStatusChanged::set_allocated_room(::Adoter::Asset::Room* room) {
+  delete room_;
+  room_ = room;
+  if (room) {
+    set_has_room();
+  } else {
+    clear_has_room();
+  }
+  // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.ClanRoomStatusChanged.room)
+}
+
+// -------------------------------------------------------------------
+
+// ClanRoomSync
+
+// optional .Adoter.Asset.META_TYPE type_t = 1 [default = META_TYPE_S2S_CLAN_ROOM_SYNC];
+inline bool ClanRoomSync::has_type_t() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ClanRoomSync::set_has_type_t() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ClanRoomSync::clear_has_type_t() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ClanRoomSync::clear_type_t() {
+  type_t_ = 1006;
+  clear_has_type_t();
+}
+inline ::Adoter::Asset::META_TYPE ClanRoomSync::type_t() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanRoomSync.type_t)
+  return static_cast< ::Adoter::Asset::META_TYPE >(type_t_);
+}
+inline void ClanRoomSync::set_type_t(::Adoter::Asset::META_TYPE value) {
+  assert(::Adoter::Asset::META_TYPE_IsValid(value));
+  set_has_type_t();
+  type_t_ = value;
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanRoomSync.type_t)
+}
+
+// optional bytes room_status = 2;
+inline bool ClanRoomSync::has_room_status() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void ClanRoomSync::set_has_room_status() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void ClanRoomSync::clear_has_room_status() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void ClanRoomSync::clear_room_status() {
+  if (room_status_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    room_status_->clear();
+  }
+  clear_has_room_status();
+}
+inline const ::std::string& ClanRoomSync::room_status() const {
+  // @@protoc_insertion_point(field_get:Adoter.Asset.ClanRoomSync.room_status)
+  return *room_status_;
+}
+inline void ClanRoomSync::set_room_status(const ::std::string& value) {
+  set_has_room_status();
+  if (room_status_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    room_status_ = new ::std::string;
+  }
+  room_status_->assign(value);
+  // @@protoc_insertion_point(field_set:Adoter.Asset.ClanRoomSync.room_status)
+}
+inline void ClanRoomSync::set_room_status(const char* value) {
+  set_has_room_status();
+  if (room_status_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    room_status_ = new ::std::string;
+  }
+  room_status_->assign(value);
+  // @@protoc_insertion_point(field_set_char:Adoter.Asset.ClanRoomSync.room_status)
+}
+inline void ClanRoomSync::set_room_status(const void* value, size_t size) {
+  set_has_room_status();
+  if (room_status_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    room_status_ = new ::std::string;
+  }
+  room_status_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:Adoter.Asset.ClanRoomSync.room_status)
+}
+inline ::std::string* ClanRoomSync::mutable_room_status() {
+  set_has_room_status();
+  if (room_status_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    room_status_ = new ::std::string;
+  }
+  // @@protoc_insertion_point(field_mutable:Adoter.Asset.ClanRoomSync.room_status)
+  return room_status_;
+}
+inline ::std::string* ClanRoomSync::release_room_status() {
+  clear_has_room_status();
+  if (room_status_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    return NULL;
+  } else {
+    ::std::string* temp = room_status_;
+    room_status_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    return temp;
+  }
+}
+inline void ClanRoomSync::set_allocated_room_status(::std::string* room_status) {
+  if (room_status_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete room_status_;
+  }
+  if (room_status) {
+    set_has_room_status();
+    room_status_ = room_status;
+  } else {
+    clear_has_room_status();
+    room_status_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_set_allocated:Adoter.Asset.ClanRoomSync.room_status)
+}
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -24527,6 +27270,11 @@ template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::Adoter::Asset::LOAD_SCENE_TYPE>() {
   return ::Adoter::Asset::LOAD_SCENE_TYPE_descriptor();
 }
+template <> struct is_proto_enum< ::Adoter::Asset::CLAN_MEM_STATUS_TYPE> : ::google::protobuf::internal::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::Adoter::Asset::CLAN_MEM_STATUS_TYPE>() {
+  return ::Adoter::Asset::CLAN_MEM_STATUS_TYPE_descriptor();
+}
 template <> struct is_proto_enum< ::Adoter::Asset::ERROR_TYPE> : ::google::protobuf::internal::true_type {};
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::Adoter::Asset::ERROR_TYPE>() {
@@ -24582,6 +27330,11 @@ template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::Adoter::Asset::GAME_OPER_TYPE>() {
   return ::Adoter::Asset::GAME_OPER_TYPE_descriptor();
 }
+template <> struct is_proto_enum< ::Adoter::Asset::CLAN_OPER_TYPE> : ::google::protobuf::internal::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::Adoter::Asset::CLAN_OPER_TYPE>() {
+  return ::Adoter::Asset::CLAN_OPER_TYPE_descriptor();
+}
 template <> struct is_proto_enum< ::Adoter::Asset::ROOM_SYNC_TYPE> : ::google::protobuf::internal::true_type {};
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::Adoter::Asset::ROOM_SYNC_TYPE>() {
@@ -24606,6 +27359,11 @@ template <> struct is_proto_enum< ::Adoter::Asset::ROLE_TYPE> : ::google::protob
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::Adoter::Asset::ROLE_TYPE>() {
   return ::Adoter::Asset::ROLE_TYPE_descriptor();
+}
+template <> struct is_proto_enum< ::Adoter::Asset::CLAN_ROOM_STATUS_TYPE> : ::google::protobuf::internal::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::Adoter::Asset::CLAN_ROOM_STATUS_TYPE>() {
+  return ::Adoter::Asset::CLAN_ROOM_STATUS_TYPE_descriptor();
 }
 
 }  // namespace google
